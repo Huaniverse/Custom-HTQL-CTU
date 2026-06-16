@@ -2,7 +2,9 @@
 
 Extension Chrome để tuỳ biến giao diện HTQL CTU — bao gồm trang đăng nhập và trang dashboard sinh viên (`hindex.php`) — theo phong cách glassmorphism hiện đại.
 
-![Ảnh demo giao diện đăng nhập](https://github.com/user-attachments/assets/4ee5f41d-f59e-477d-8f68-ff535413a26e)
+![Ảnh demo giao diện đăng nhập](https://github.com/user-attachments/assets/586e697b-fd18-4ec8-9aeb-eb793fc5dda9")
+![Ảnh demo giao diện dashboard](https://github.com/user-attachments/assets/bf7a025f-180f-420e-be13-2e6273446c65")
+
 
 ## Tính năng chính
 
