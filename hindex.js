@@ -591,7 +591,7 @@
         margin: 0 !important;
         width: 100% !important;
         min-height: 100% !important;
-        overflow: hidden !important;
+        overflow: auto !important;
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
         background: ${cssBackgroundUrl(bgUrl)} center center / cover fixed no-repeat !important;
       }
@@ -599,6 +599,16 @@
       body::before,
       body::after {
         content: none !important;
+        display: none !important;
+      }
+
+      ::-webkit-scrollbar {
+        display: none;
+      }
+
+      * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
       }
 
       body.htql-hindex-active > *:not(#${ROOT_ID}) {
@@ -1195,8 +1205,8 @@
     }
     document.body.appendChild(buildShell(data));
     document.body.style.margin = '0';
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
 
     removeLoadingState();
   }
