@@ -404,43 +404,43 @@
 
         <main class="htql-hindex-main">
           <section class="htql-hindex-card htql-hindex-hero">
-            <div class="htql-hindex-hero-head">
-              <div class="htql-hindex-name-row">
+            <div class="htql-hindex-hero-inner">
+              <div class="htql-hindex-hero-info">
                 <div class="htql-hindex-name-group">
                   <h1 class="htql-hindex-name" id="htql-hindex-student-name"></h1>
                   <span class="htql-hindex-badge" id="htql-hindex-student-id"></span>
                 </div>
                 <div class="htql-hindex-faculty" id="htql-hindex-faculty"></div>
+                <div class="htql-hindex-major" id="htql-hindex-major"></div>
               </div>
-              <div class="htql-hindex-major" id="htql-hindex-major"></div>
-            </div>
-            <div class="htql-hindex-chip-row">
-              <div class="htql-hindex-chip">
-                <div class="htql-hindex-chip-icon">${svgIcon('calendar')}</div>
-                <div>
-                  <div class="htql-hindex-chip-label">Ngày sinh</div>
-                  <div class="htql-hindex-chip-value" id="htql-hindex-birth-date"></div>
+              <div class="htql-hindex-chip-grid">
+                <div class="htql-hindex-chip">
+                  <div class="htql-hindex-chip-icon">${svgIcon('calendar')}</div>
+                  <div>
+                    <div class="htql-hindex-chip-label">Ngày sinh</div>
+                    <div class="htql-hindex-chip-value" id="htql-hindex-birth-date"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="htql-hindex-chip">
-                <div class="htql-hindex-chip-icon">${svgIcon('class')}</div>
-                <div>
-                  <div class="htql-hindex-chip-label">Lớp sinh hoạt</div>
-                  <div class="htql-hindex-chip-value" id="htql-hindex-class"></div>
+                <div class="htql-hindex-chip">
+                  <div class="htql-hindex-chip-icon">${svgIcon('class')}</div>
+                  <div>
+                    <div class="htql-hindex-chip-label">Lớp</div>
+                    <div class="htql-hindex-chip-value" id="htql-hindex-class"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="htql-hindex-chip">
-                <div class="htql-hindex-chip-icon">${svgIcon('gender')}</div>
-                <div>
-                  <div class="htql-hindex-chip-label">Giới tính</div>
-                  <div class="htql-hindex-chip-value" id="htql-hindex-gender"></div>
+                <div class="htql-hindex-chip">
+                  <div class="htql-hindex-chip-icon">${svgIcon('gender')}</div>
+                  <div>
+                    <div class="htql-hindex-chip-label">Giới tính</div>
+                    <div class="htql-hindex-chip-value" id="htql-hindex-gender"></div>
+                  </div>
                 </div>
-              </div>
-              <div class="htql-hindex-chip">
-                <div class="htql-hindex-chip-icon">${svgIcon('course')}</div>
-                <div>
-                  <div class="htql-hindex-chip-label">Khóa học</div>
-                  <div class="htql-hindex-chip-value" id="htql-hindex-course-year"></div>
+                <div class="htql-hindex-chip">
+                  <div class="htql-hindex-chip-icon">${svgIcon('course')}</div>
+                  <div>
+                    <div class="htql-hindex-chip-label">Khóa học</div>
+                    <div class="htql-hindex-chip-value" id="htql-hindex-course-year"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -477,7 +477,7 @@
 
     setText('#htql-hindex-student-name', data.student.name || '---');
     setText('#htql-hindex-student-id', data.student.studentId || '---');
-    setText('#htql-hindex-major', data.student.major || 'Ngành học chưa xác định');
+    setText('#htql-hindex-major', (data.student.major ? 'Ngành ' + data.student.major : 'Ngành học chưa xác định'));
     const facultyEl = rootQuery('#htql-hindex-faculty');
     if (facultyEl) facultyEl.textContent = data.student.faculty || '';
     setText('#htql-hindex-birth-date', data.student.birthDate);
@@ -494,7 +494,7 @@
         </div>
       `;
       advisorCard.appendChild(makeInfoRow('Mã cán bộ', data.advisor.id));
-      advisorCard.appendChild(makeInfoRow('Họ và tên', data.advisor.name, true));
+      advisorCard.appendChild(makeInfoRow('Họ và tên', data.advisor.name));
       advisorCard.appendChild(makeInfoRow('Email', data.advisor.email));
       advisorCard.appendChild(makeInfoRow('Điện thoại', data.advisor.phone));
     }
@@ -678,7 +678,7 @@
       .htql-hindex-brand-title {
         color: var(--htql-hindex-blue);
         font-size: 1.18rem;
-        line-height: 1.05;
+        line-height: 1.3;
         font-weight: 800;
         letter-spacing: -0.03em;
         text-transform: uppercase;
@@ -775,6 +775,22 @@
         flex-direction: column;
       }
 
+      .htql-hindex-hero-inner {
+        display: flex;
+        align-items: stretch;
+        gap: 20px;
+        flex: 1;
+      }
+
+      .htql-hindex-hero-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        justify-content: center;
+      }
+
       .htql-hindex-advisor-panel {
         grid-column: 2;
         grid-row: 1;
@@ -802,23 +818,10 @@
         min-height: 0;
       }
 
-      .htql-hindex-hero-head {
-        display: grid;
-        gap: 6px;
-        flex: 1;
-      }
-
-      .htql-hindex-name-row {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
       .htql-hindex-name-group {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         flex-wrap: wrap;
         min-width: 0;
       }
@@ -826,7 +829,7 @@
       .htql-hindex-name {
         margin: 0;
         color: var(--htql-hindex-blue);
-        font-size: clamp(1.55rem, 2vw, 2.1rem);
+        font-size: clamp(2rem, 2.8vw, 3rem);
         line-height: 1;
         letter-spacing: -0.04em;
         font-weight: 800;
@@ -837,37 +840,36 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 28px;
-        padding: 0 12px;
-        border-radius: 10px;
+        min-height: 38px;
+        padding: 0 18px;
+        border-radius: 12px;
         background: var(--htql-hindex-badge-bg);
         border: 1px solid ${themeTint(theme, 0.16)};
         color: var(--htql-hindex-blue);
         font-weight: 800;
         letter-spacing: 0.02em;
-        font-size: 0.88rem;
+        font-size: 1.3rem;
+      }
+
+      .htql-hindex-faculty {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--htql-hindex-muted);
+        line-height: 1.35;
       }
 
       .htql-hindex-major {
-        font-size: clamp(1rem, 1.2vw, 1.16rem);
+        font-size: clamp(1.1rem, 1.4vw, 1.35rem);
         font-weight: 600;
         color: var(--htql-hindex-ink);
       }
 
-      .htql-hindex-faculty {
-        font-size: 0.86rem;
-        font-weight: 600;
-        color: var(--htql-hindex-muted);
-        text-align: right;
-        max-width: 42%;
-        line-height: 1.35;
-      }
-
-      .htql-hindex-chip-row {
-        display: flex;
-        flex-wrap: wrap;
+      .htql-hindex-chip-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 10px;
-        margin-top: 16px;
+        align-content: center;
+        flex: 0 0 auto;
       }
 
       .htql-hindex-chip {
@@ -1122,14 +1124,12 @@
           font-size: 1.06rem;
         }
 
-        .htql-hindex-name-row {
+        .htql-hindex-hero-inner {
           flex-direction: column;
-          align-items: flex-start;
         }
 
-        .htql-hindex-faculty {
-          max-width: 100%;
-          text-align: left;
+        .htql-hindex-chip-grid {
+          grid-template-columns: 1fr 1fr;
         }
 
         .htql-hindex-feature-grid {
