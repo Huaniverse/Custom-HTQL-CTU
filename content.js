@@ -75,6 +75,9 @@
         --theme-glass-blur: ${blur}px;
         --theme-primary-color: ${themeColor};
         --theme-text-color: ${textColor};
+        --login-card-width: 440px;
+        --login-sidebar-width: 380px;
+        --login-edge-gap: 24px;
       }
 
       * {
@@ -87,9 +90,18 @@
         width: 100vw !important;
         height: 100vh !important;
         overflow: hidden !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background: url('${finalBgUrl}') no-repeat center center fixed !important;
         background-size: cover !important;
+      }
+
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
+        display: none !important;
       }
 
       /* --- Page Wrapper --- */
@@ -136,7 +148,10 @@
       /* Khi có sidebar (>=1024px): dịch sang trái một nửa width sidebar */
       @media (min-width: 1024px) {
         .ui.container.medium {
-          left: calc(50% - 190px) !important;
+          left: min(
+            50%,
+            calc(100vw - var(--login-sidebar-width) - (var(--login-card-width) / 2) - var(--login-edge-gap))
+          ) !important;
         }
       }
 
@@ -400,7 +415,15 @@
         box-sizing: border-box !important;
         z-index: 100 !important;
         overflow-y: auto !important;
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
         display: block !important;
+      }
+
+      .slogan-container::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
+        display: none !important;
       }
 
       /* Ẩn header thông báo gốc */
