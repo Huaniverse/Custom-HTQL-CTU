@@ -18,7 +18,7 @@ Extension Chrome để tuỳ biến giao diện đăng nhập HTQL CTU theo phon
 1. Mở Chrome và truy cập `chrome://extensions/`.
 2. Bật chế độ `Developer mode` ở góc trên bên phải.
 3. Chọn `Load unpacked`.
-4. Trỏ đến thư mục `E:\htql-css`.
+4. Chọn thư mục repo.
 5. Mở trang `https://htql.ctu.edu.vn/` hoặc `https://accounts.ctu.edu.vn/` để xem giao diện đã được áp dụng.
 
 ## Cách sử dụng
