@@ -2,8 +2,7 @@
 
 Extension Chrome để tuỳ biến giao diện đăng nhập HTQL CTU theo phong cách glassmorphism, đổi màu chủ đạo, đổi độ mờ nền và thay ảnh nền.
 
-![Ảnh demo giao diện đăng nhập](<img width="2576" height="1722" alt="image" src="https://github.com/user-attachments/assets/4ee5f41d-f59e-477d-8f68-ff535413a26e" />
-)
+![Ảnh demo giao diện đăng nhập](https://github.com/user-attachments/assets/4ee5f41d-f59e-477d-8f68-ff535413a26e)
 
 ## Tính năng chính
 
@@ -47,8 +46,6 @@ Bạn có 3 cách thay ảnh nền:
 - Khung đăng nhập nằm chính giữa phần nội dung.
 - Khi có sidebar thông báo bên phải, khung đăng nhập tự lùi sang trái nếu cần.
 - Thanh cuộn được ẩn để giao diện gọn hơn.
-
-![Demo giao diện HTQL]()
 
 ## Cấu trúc file
 
