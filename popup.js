@@ -18,6 +18,10 @@
   let state = { ...DEFAULTS };
   let toastTimer = null;
 
+  function cssBackgroundUrl(url) {
+    return `url("${String(url).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`;
+  }
+
   // ============================================================
   // DOM REFS
   // ============================================================
@@ -80,7 +84,7 @@
 
     // Background
     const bgSrc = (bg && bg !== "") ? bg : "background.png";
-    previewBox.style.backgroundImage = `url('${bgSrc}')`;
+    previewBox.style.backgroundImage = cssBackgroundUrl(bgSrc);
 
     // Glass card
     previewCard.style.background = `rgba(255,255,255,${opacity})`;
@@ -93,16 +97,16 @@
 
     // Current bg info
     if (bg && bg.startsWith("data:image")) {
-      currentBgThumb.style.backgroundImage = `url('${bg}')`;
+      currentBgThumb.style.backgroundImage = cssBackgroundUrl(bg);
       currentBgName.textContent = "Ảnh đã tải lên";
       currentBgType.textContent = "Local file";
     } else if (bg && bg.startsWith("http")) {
-      currentBgThumb.style.backgroundImage = `url('${bg}')`;
+      currentBgThumb.style.backgroundImage = cssBackgroundUrl(bg);
       const short = bg.replace(/https?:\/\//, "").split("?")[0];
       currentBgName.textContent = short.length > 32 ? short.slice(0, 32) + "…" : short;
       currentBgType.textContent = "URL từ internet";
     } else {
-      currentBgThumb.style.backgroundImage = "url('background.png')";
+      currentBgThumb.style.backgroundImage = cssBackgroundUrl("background.png");
       currentBgName.textContent = "CTU Campus (Mặc định)";
       currentBgType.textContent = "Preset tích hợp";
     }

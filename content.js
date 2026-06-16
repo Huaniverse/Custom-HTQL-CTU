@@ -16,6 +16,13 @@
   };
 
   // ============================================================
+  // HELPERS
+  // ============================================================
+  function cssBackgroundUrl(url) {
+    return `url("${String(url).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`;
+  }
+
+  // ============================================================
   // 1) XÓA & VÔ HIỆU HÓA TẤT CẢ CSS GỐC
   // ============================================================
   function disableOriginalCSS() {
@@ -93,7 +100,7 @@
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        background: url('${finalBgUrl}') no-repeat center center fixed !important;
+        background: ${cssBackgroundUrl(finalBgUrl)} no-repeat center center fixed !important;
         background-size: cover !important;
       }
 
@@ -573,20 +580,37 @@
   let validationSetup = false;
   function setupValidationHide() {
     if (validationSetup) return;
-    const signInBtn = document.getElementById('sign-in-button') || document.getElementById('loginForm');
-    if (!signInBtn) return;
+    const loginBtn = document.getElementById('sign-in-button');
+    if (!loginBtn) return;
     validationSetup = true;
 
-    // Khi bấm nút đăng nhập, thêm class htql-show-error để hiện lỗi
-    const loginBtn = document.getElementById('sign-in-button');
-    if (loginBtn) {
-      loginBtn.addEventListener('click', () => {
-        const usernameErr = document.getElementById('usernameError');
-        const passwordErr = document.getElementById('passwordError');
-        if (usernameErr) usernameErr.classList.add('htql-show-error');
-        if (passwordErr) passwordErr.classList.add('htql-show-error');
-      }, { once: false });
+    const usernameInput = document.getElementById('usernameUserInput');
+    const passwordInput = document.getElementById('password');
+    const usernameErr = document.getElementById('usernameError');
+    const passwordErr = document.getElementById('passwordError');
+
+    function syncValidationErrors() {
+      if (usernameErr) {
+        usernameErr.classList.toggle('htql-show-error', !usernameInput?.value?.trim());
+      }
+      if (passwordErr) {
+        passwordErr.classList.toggle('htql-show-error', !passwordInput?.value?.trim());
+      }
     }
+
+    loginBtn.addEventListener('click', syncValidationErrors);
+
+    usernameInput?.addEventListener('input', () => {
+      if (usernameInput.value.trim()) {
+        usernameErr?.classList.remove('htql-show-error');
+      }
+    });
+
+    passwordInput?.addEventListener('input', () => {
+      if (passwordInput.value.trim()) {
+        passwordErr?.classList.remove('htql-show-error');
+      }
+    });
   }
 
   // ============================================================
