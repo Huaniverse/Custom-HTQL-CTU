@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "HTQL Custom Theme",
+  "version": "1.2",
+  "description": "Custom giao diện đăng nhập HTQL CTU với bảng điều khiển màu sắc, độ mờ glassmorphism và hình nền tùy ý",
+  "permissions": ["activeTab", "scripting", "storage", "unlimitedStorage"],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://htql.ctu.edu.vn/*",
+        "https://accounts.ctu.edu.vn/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Cấu hình giao diện HTQL"
+  },
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["background.png"],
+      "matches": ["https://accounts.ctu.edu.vn/*", "https://htql.ctu.edu.vn/*"]
+    }
+  ]
+}
