@@ -1,17 +1,33 @@
 # HTQL Custom Theme
 
-Extension Chrome để tuỳ biến giao diện đăng nhập HTQL CTU theo phong cách glassmorphism, đổi màu chủ đạo, đổi độ mờ nền và thay ảnh nền.
+Extension Chrome để tuỳ biến giao diện HTQL CTU — bao gồm trang đăng nhập và trang dashboard sinh viên (`hindex.php`) — theo phong cách glassmorphism hiện đại.
 
 ![Ảnh demo giao diện đăng nhập](https://github.com/user-attachments/assets/4ee5f41d-f59e-477d-8f68-ff535413a26e)
 
 ## Tính năng chính
 
+### Trang đăng nhập
 - Làm mờ và bo tròn khung đăng nhập theo phong cách glassmorphism.
 - Tuỳ chỉnh màu chữ, màu nút và tông giao diện.
 - Đổi độ mờ và độ blur của nền.
 - Đổi ảnh nền bằng ảnh có sẵn hoặc ảnh tự tải lên.
-- Ẩn các thành phần giao diện gốc không cần thiết để tập trung vào form đăng nhập.
-- Đồng bộ giao diện thông báo bên phải theo cùng ngôn ngữ thiết kế.
+- Đồng bộ giao diện thanh thông báo bên phải theo cùng ngôn ngữ thiết kế.
+
+### Trang dashboard sinh viên (hindex.php)
+- Thay toàn bộ giao diện gốc bằng dashboard custom glassmorphism.
+- **Hero card** hiển thị thông tin sinh viên với bố cục 2 cột:
+  - Cột trái: Tên + MSSV (cỡ lớn), Khoa, Ngành.
+  - Cột phải: 4 chip thông tin (Ngày sinh, Lớp, Giới tính, Khóa học) xếp lưới 2×2.
+- Card cố vấn học tập và thông tin gia đình.
+- Lưới chức năng nhanh với 13 mục điều hướng.
+- Thanh cuộn ẩn, nền cố định theo viewport.
+- Tự động đọc dữ liệu từ bảng HTML gốc, không cần API.
+
+### Popup cấu hình
+- Điều chỉnh Glass Opacity và Backdrop Blur qua slider.
+- Đổi màu chủ đề và màu chữ với bộ preset có sẵn.
+- 3 phương thức thay ảnh nền: upload, URL, preset tích hợp.
+- Thay đổi áp dụng real-time không cần tải lại trang.
 
 ## Cài đặt
 
@@ -19,52 +35,48 @@ Extension Chrome để tuỳ biến giao diện đăng nhập HTQL CTU theo phon
 2. Bật chế độ `Developer mode` ở góc trên bên phải.
 3. Chọn `Load unpacked`.
 4. Chọn thư mục repo.
-5. Mở trang `https://htql.ctu.edu.vn/` hoặc `https://accounts.ctu.edu.vn/` để xem giao diện đã được áp dụng.
+5. Truy cập `https://htql.ctu.edu.vn/` để xem giao diện đăng nhập, hoặc `https://dkmh.ctu.edu.vn/htql/sinhvien/hindex.php` để xem dashboard.
 
 ## Cách sử dụng
 
 1. Bấm vào icon extension trên thanh công cụ để mở bảng cấu hình.
 2. Chỉnh các thông số trong popup:
-   - `Glass Opacity`: độ trong suốt của khung đăng nhập.
+   - `Glass Opacity`: độ trong suốt của các card.
    - `Backdrop Blur`: độ mờ nền phía sau.
    - `Màu sắc`: đổi màu chủ đạo và màu chữ.
-   - `Ảnh nền`: thay bằng URL hoặc ảnh upload từ máy.
-3. Mọi thay đổi sẽ được lưu vào `chrome.storage.local` và tự áp dụng lại khi tải trang.
+   - `Ảnh nền`: thay bằng URL, upload từ máy hoặc chọn preset.
+3. Mọi thay đổi lưu vào `chrome.storage.local` và tự áp dụng lại khi tải trang.
 
 ## Tuỳ chỉnh ảnh nền
 
-Bạn có 3 cách thay ảnh nền:
+3 cách thay ảnh nền:
 
 - Dùng ảnh mặc định đi kèm extension.
-- Dán URL ảnh trực tiếp vào phần nhập ảnh nền.
-- Tải ảnh từ máy tính lên bằng nút upload.
-
-## Demo giao diện
-
-Ảnh bên dưới minh hoạ bố cục thực tế:
-
-- Khung đăng nhập nằm chính giữa phần nội dung.
-- Khi có sidebar thông báo bên phải, khung đăng nhập tự lùi sang trái nếu cần.
-- Thanh cuộn được ẩn để giao diện gọn hơn.
+- Dán URL ảnh trực tiếp vào ô nhập.
+- Tải ảnh từ máy tính lên (tối đa 4.5MB).
 
 ## Cấu trúc file
 
-- `content.js`: inject và thay đổi giao diện trang HTQL.
-- `popup.html`: giao diện bảng cấu hình.
-- `popup.js`: logic cho các điều khiển trong popup.
-- `background.png`: ảnh nền mặc định.
-- `icon48.png`, `icon128.png`: icon extension.
-- `manifest.json`: cấu hình extension.
+| File | Mô tả |
+|------|-------|
+| `content.js` | Inject giao diện trang đăng nhập HTQL |
+| `hindex.js` | Inject dashboard custom cho trang hindex.php |
+| `popup.html` | Giao diện bảng cấu hình |
+| `popup.js` | Logic các điều khiển trong popup |
+| `background.png` | Ảnh nền mặc định |
+| `icon48.png`, `icon128.png` | Icon extension |
+| `manifest.json` | Cấu hình extension Chrome |
+
+## Ghi chú kỹ thuật
+
+- `hindex.js` đọc dữ liệu trực tiếp từ các bảng HTML gốc bằng text matching, không cần API.
+- Toàn bộ CSS gốc của trang bị vô hiệu hoá và thay bằng stylesheet custom.
+- Ảnh nền dùng `background-attachment: fixed` nên không bị kéo theo khi scroll.
+- Thanh cuộn được ẩn trên toàn trang (`scrollbar-width: none`, `::-webkit-scrollbar: display none`).
+- Màu sắc scrollbar, badge, chip... tự động tính từ `themeColor` được chọn trong popup.
 
 ## Lưu ý
 
 - Extension chỉ hoạt động trên các domain được khai báo trong `manifest.json`.
-- Nếu CTU thay đổi cấu trúc HTML/CSS của trang đăng nhập, có thể cần cập nhật lại selector trong `content.js`.
-- Một số trình duyệt có thể cần reload extension sau khi chỉnh mã nguồn.
-
-## Ghi chú kỹ thuật
-
-- Giao diện đăng nhập được canh giữa bằng CSS cố định theo viewport.
-- Sidebar thông báo bên phải được giữ đồng bộ với phong cách glassmorphism.
-- Scrollbar được ẩn để tránh làm xô lệch bố cục.
-
+- Nếu CTU thay đổi cấu trúc HTML của trang, có thể cần cập nhật lại selector trong `content.js` hoặc `hindex.js`.
+- Reload extension sau khi chỉnh mã nguồn nếu thay đổi không hiển thị.
