@@ -9,7 +9,14 @@
       "matches": [
         "https://dkmh.ctu.edu.vn/htql/sinhvien/hindex.php"
       ],
-      "js": ["hindex.js"],
+      "js": ["shared.js", "hindex.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://dkmh.ctu.edu.vn/htql/sinhvien/ctdt/codes/*"
+      ],
+      "js": ["shared.js", "sindex.js"],
       "run_at": "document_start"
     },
     {
