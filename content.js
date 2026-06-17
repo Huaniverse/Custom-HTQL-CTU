@@ -12,6 +12,7 @@
     glassBlur: 20,
     themeColor: "#152550",
     textColor: "#1E293B",
+    fontFamily: "Plus Jakarta Sans",
     bgUrl: ""
   };
 
@@ -20,6 +21,49 @@
   // ============================================================
   function cssBackgroundUrl(url) {
     return `url("${String(url).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`;
+  }
+
+  function isVideoUrl(url) {
+    return url && (url.startsWith('data:video') || /\.(mp4|webm)(\?|$)/i.test(url));
+  }
+
+  function applyVideoBg(url) {
+    let vid = document.getElementById('htql-video-bg');
+    if (!url) {
+      if (vid) {
+        vid.pause();
+        vid.src = '';
+        vid.load();
+        vid.remove();
+      }
+      return;
+    }
+    if (!vid) {
+      vid = document.createElement('video');
+      vid.id = 'htql-video-bg';
+      vid.style.cssText = [
+        'position:fixed', 'inset:0', 'width:100%', 'height:100%',
+        'object-fit:cover', 'z-index:-1', 'pointer-events:none',
+        'will-change:transform', 'transform:translateZ(0)',
+      ].join(';');
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.disablePictureInPicture = true;
+      vid.preload = 'auto';
+      // Tạm dừng khi tab bị ẩn, resume khi tab hiện lại
+      document.addEventListener('visibilitychange', () => {
+        if (!document.getElementById('htql-video-bg')) return;
+        document.hidden ? vid.pause() : vid.play().catch(() => {});
+      });
+      document.body.insertBefore(vid, document.body.firstChild);
+    }
+    if (vid.dataset.src !== url) {
+      vid.src = url;
+      vid.dataset.src = url;
+      vid.play().catch(() => {});
+    }
   }
 
   // ============================================================
@@ -72,10 +116,11 @@
     const blur = s.glassBlur !== undefined ? s.glassBlur : DEFAULTS.glassBlur;
     const themeColor = s.themeColor || DEFAULTS.themeColor;
     const textColor = s.textColor || DEFAULTS.textColor;
+    const fontFamily = s.fontFamily || DEFAULTS.fontFamily;
 
     style.textContent = `
       /* --- Thiết lập nền tảng --- */
-      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap');
 
       :root {
         --theme-glass-opacity: ${opacity};
@@ -99,9 +144,9 @@
         overflow: hidden !important;
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        background: ${cssBackgroundUrl(finalBgUrl)} no-repeat center center fixed !important;
-        background-size: cover !important;
+        font-family: '${fontFamily}', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        background: ${isVideoUrl(finalBgUrl) ? 'transparent' : `${cssBackgroundUrl(finalBgUrl)} no-repeat center center fixed`} !important;
+        background-size: ${isVideoUrl(finalBgUrl) ? 'auto' : 'cover'} !important;
       }
 
       html::-webkit-scrollbar,
@@ -572,6 +617,28 @@
       // Sync data thực tế từ notification list gốc
       syncNotifications();
     }
+
+    // Watermark
+    if (!document.getElementById('htql-watermark')) {
+      const wm = document.createElement('div');
+      wm.id = 'htql-watermark';
+      wm.textContent = 'Custom by Huaniverse';
+      wm.style.cssText = [
+        'position:fixed',
+        'bottom:14px',
+        'right:auto',
+        'left:18px',
+        'font-size:11px',
+        'font-weight:600',
+        'color:rgba(255,255,255,0.45)',
+        'letter-spacing:0.03em',
+        'pointer-events:none',
+        'z-index:9999',
+        'font-family:inherit',
+        'user-select:none',
+      ].join(';');
+      document.body.appendChild(wm);
+    }
   }
 
   // ============================================================
@@ -705,21 +772,25 @@
       chrome.storage.local.get(DEFAULTS, (settings) => {
         disableOriginalCSS();
         injectCustomCSS(settings);
+        applyVideoBg(isVideoUrl(settings.bgUrl) ? settings.bgUrl : null);
+        document.documentElement.style.background = '';
         rebuildPageElements();
       });
     } else {
       disableOriginalCSS();
       injectCustomCSS(DEFAULTS);
+      applyVideoBg(null);
+      document.documentElement.style.background = '';
       rebuildPageElements();
     }
   }
 
-  // Lắng nghe thay đổi settings từ popup (real-time)
   if (chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
       chrome.storage.local.get(DEFAULTS, (settings) => {
         injectCustomCSS(settings);
+        applyVideoBg(isVideoUrl(settings.bgUrl) ? settings.bgUrl : null);
       });
     });
   }
@@ -738,9 +809,10 @@
     }
   }
 
-  // Chạy sớm nhất có thể
+  // Chạy sớm nhất có thể — chỉ disable CSS gốc, chưa inject background
+  // để tránh flash ảnh mặc định trước khi storage callback trả về
   disableOriginalCSS();
-  injectCustomCSS(DEFAULTS);
+  document.documentElement.style.background = '#0a0f1e';
 
   // MutationObserver: giữ theme & xử lý DOM động
   let observerThrottle = false;

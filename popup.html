@@ -410,6 +410,9 @@
 
     /* Upload area */
     .upload-area {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
       border: 1.5px dashed var(--border-hi);
       border-radius: var(--radius);
       padding: 20px 16px;
@@ -541,6 +544,15 @@
       background-color: var(--surface2);
       border: 1px solid var(--border);
       flex-shrink: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .current-bg-thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .current-bg-text { flex: 1; min-width: 0; }
@@ -654,6 +666,40 @@
       flex-shrink: 0;
     }
 
+    /* ===== FONT SELECTOR ===== */
+    .font-select-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .font-option {
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .font-option:hover {
+      border-color: var(--border-hi);
+      background: var(--surface2);
+    }
+
+    .font-option.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
     /* ===== DIVIDER ===== */
     .divider {
       height: 1px;
@@ -709,6 +755,10 @@
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
       Màu sắc
     </button>
+    <button class="tab-btn" data-tab="font" id="tab-font">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+      Font
+    </button>
     <button class="tab-btn" data-tab="bg" id="tab-bg">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
       Ảnh nền
@@ -757,7 +807,7 @@
 
     <!-- COLORS PANEL -->
     <div class="panel" id="panel-colors">
-      <div class="color-grid">
+      <div class="color-grid" style="grid-template-columns: 1fr;">
         <!-- Theme Color -->
         <div class="color-item">
           <div class="color-item-label">Màu chủ đề</div>
@@ -766,6 +816,16 @@
               <input type="color" id="theme-color" value="#152550">
             </div>
             <span class="color-hex-display" id="theme-color-hex">#152550</span>
+          </div>
+          <div class="preset-colors" id="theme-presets">
+            <div class="preset-color-dot" style="background:#152550" data-color="#152550" title="CTU Navy"></div>
+            <div class="preset-color-dot" style="background:#1d4ed8" data-color="#1d4ed8" title="Royal Blue"></div>
+            <div class="preset-color-dot" style="background:#0f766e" data-color="#0f766e" title="Teal"></div>
+            <div class="preset-color-dot" style="background:#7c3aed" data-color="#7c3aed" title="Purple"></div>
+            <div class="preset-color-dot" style="background:#b91c1c" data-color="#b91c1c" title="Red"></div>
+            <div class="preset-color-dot" style="background:#b45309" data-color="#b45309" title="Amber"></div>
+            <div class="preset-color-dot" style="background:#0e7490" data-color="#0e7490" title="Cyan"></div>
+            <div class="preset-color-dot" style="background:#1e293b" data-color="#1e293b" title="Slate"></div>
           </div>
         </div>
         <!-- Text Color -->
@@ -777,34 +837,53 @@
             </div>
             <span class="color-hex-display" id="text-color-hex">#1E293B</span>
           </div>
+          <div class="preset-colors" id="text-presets">
+            <div class="preset-color-dot" style="background:#1e293b" data-color="#1e293b" title="Slate Dark"></div>
+            <div class="preset-color-dot" style="background:#111827" data-color="#111827" title="Gray 900"></div>
+            <div class="preset-color-dot" style="background:#1e3a5f" data-color="#1e3a5f" title="Navy Text"></div>
+            <div class="preset-color-dot" style="background:#374151" data-color="#374151" title="Gray 700"></div>
+            <div class="preset-color-dot" style="background:#064e3b" data-color="#064e3b" title="Emerald"></div>
+            <div class="preset-color-dot" style="background:#ffffff" data-color="#ffffff" title="White"></div>
+          </div>
+        </div>
+        <!-- Heading Color -->
+        <div class="color-item">
+          <div class="color-item-label">Màu nhãn trường thông tin</div>
+          <div class="color-swatch-row">
+            <div class="color-swatch-btn" id="heading-color-swatch">
+              <input type="color" id="heading-color" value="#152550">
+            </div>
+            <span class="color-hex-display" id="heading-color-hex">#152550</span>
+          </div>
+          <div class="preset-colors" id="heading-presets">
+            <div class="preset-color-dot" style="background:#152550" data-color="#152550" title="CTU Navy"></div>
+            <div class="preset-color-dot" style="background:#1d4ed8" data-color="#1d4ed8" title="Royal Blue"></div>
+            <div class="preset-color-dot" style="background:#0f766e" data-color="#0f766e" title="Teal"></div>
+            <div class="preset-color-dot" style="background:#7c3aed" data-color="#7c3aed" title="Purple"></div>
+            <div class="preset-color-dot" style="background:#b91c1c" data-color="#b91c1c" title="Red"></div>
+            <div class="preset-color-dot" style="background:#b45309" data-color="#b45309" title="Amber"></div>
+            <div class="preset-color-dot" style="background:#0e7490" data-color="#0e7490" title="Cyan"></div>
+            <div class="preset-color-dot" style="background:#059669" data-color="#059669" title="Emerald"></div>
+            <div class="preset-color-dot" style="background:#db2777" data-color="#db2777" title="Pink"></div>
+            <div class="preset-color-dot" style="background:#64748b" data-color="#64748b" title="Slate"></div>
+          </div>
         </div>
       </div>
+    </div>
 
+    <!-- FONT PANEL -->
+    <div class="panel" id="panel-font">
       <div>
-        <div class="section-title">Preset màu chủ đề</div>
-        <div class="preset-colors" id="theme-presets">
-          <div class="preset-color-dot" style="background:#152550" data-color="#152550" title="CTU Navy"></div>
-          <div class="preset-color-dot" style="background:#1d4ed8" data-color="#1d4ed8" title="Royal Blue"></div>
-          <div class="preset-color-dot" style="background:#0f766e" data-color="#0f766e" title="Teal"></div>
-          <div class="preset-color-dot" style="background:#7c3aed" data-color="#7c3aed" title="Purple"></div>
-          <div class="preset-color-dot" style="background:#b91c1c" data-color="#b91c1c" title="Red"></div>
-          <div class="preset-color-dot" style="background:#b45309" data-color="#b45309" title="Amber"></div>
-          <div class="preset-color-dot" style="background:#0e7490" data-color="#0e7490" title="Cyan"></div>
-          <div class="preset-color-dot" style="background:#1e293b" data-color="#1e293b" title="Slate"></div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div>
-        <div class="section-title">Preset màu chữ</div>
-        <div class="preset-colors" id="text-presets">
-          <div class="preset-color-dot" style="background:#1e293b" data-color="#1e293b" title="Slate Dark"></div>
-          <div class="preset-color-dot" style="background:#111827" data-color="#111827" title="Gray 900"></div>
-          <div class="preset-color-dot" style="background:#1e3a5f" data-color="#1e3a5f" title="Navy Text"></div>
-          <div class="preset-color-dot" style="background:#374151" data-color="#374151" title="Gray 700"></div>
-          <div class="preset-color-dot" style="background:#064e3b" data-color="#064e3b" title="Emerald"></div>
-          <div class="preset-color-dot" style="background:#ffffff" data-color="#ffffff" title="White"></div>
+        <div class="section-title">Chọn font chữ</div>
+        <div class="font-select-grid" id="font-select-grid">
+          <div class="font-option" data-font="Plus Jakarta Sans" style="font-family:'Plus Jakarta Sans',sans-serif">Plus Jakarta</div>
+          <div class="font-option" data-font="Inter" style="font-family:'Inter',sans-serif">Inter</div>
+          <div class="font-option" data-font="Be Vietnam Pro" style="font-family:'Be Vietnam Pro',sans-serif">Be Vietnam</div>
+          <div class="font-option" data-font="Nunito" style="font-family:'Nunito',sans-serif">Nunito</div>
+          <div class="font-option" data-font="Lexend" style="font-family:'Lexend',sans-serif">Lexend</div>
+          <div class="font-option" data-font="DM Sans" style="font-family:'DM Sans',sans-serif">DM Sans</div>
+          <div class="font-option" data-font="Outfit" style="font-family:'Outfit',sans-serif">Outfit</div>
+          <div class="font-option" data-font="Roboto" style="font-family:'Roboto',sans-serif">Roboto</div>
         </div>
       </div>
     </div>
@@ -834,10 +913,10 @@
             <div class="upload-icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b949e" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
             </div>
-            <div class="upload-text">Kéo thả hoặc click để chọn ảnh</div>
-            <div class="upload-sub">PNG, JPG, WebP · Tối đa 4.5MB</div>
+            <div class="upload-text">Kéo thả hoặc click để chọn</div>
+            <div class="upload-sub">PNG, JPG, WebP, GIF · MP4, WebM · Tối đa 50MB</div>
           </label>
-          <input type="file" id="file-input" accept="image/*">
+          <input type="file" id="file-input" accept="image/*,video/mp4,video/webm">
         </div>
 
         <!-- URL method -->

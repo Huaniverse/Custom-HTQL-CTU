@@ -20,6 +20,8 @@
     glassBlur: 20,
     themeColor: '#152550',
     textColor: '#1e293b',
+    headingColor: '#152550',
+    fontFamily: 'Plus Jakarta Sans',
     bgUrl: '',
   };
 
@@ -32,10 +34,14 @@
     html.htql-hindex-loading,
     html.htql-hindex-loading body {
       visibility: hidden !important;
+      background: #0a0f1e !important;
     }
   `;
   (document.documentElement || document.head || document.body).appendChild(loadingStyle);
   document.documentElement.classList.add('htql-hindex-loading');
+
+  /* Đặt màu nền tạm ngay lên <html> để tránh flash trắng khi removeLoadingState */
+  document.documentElement.style.background = '#0a0f1e';
 
   function normalize(value) {
     return String(value || '').replace(/\s+/g, ' ').trim();
@@ -255,6 +261,49 @@
     return `url("${String(url).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`;
   }
 
+  function isVideoUrl(url) {
+    return url && (url.startsWith('data:video') || /\.(mp4|webm)(\?|$)/i.test(url));
+  }
+
+  function applyVideoBg(url) {
+    let vid = document.getElementById('htql-hindex-video-bg');
+    if (!url) {
+      if (vid) {
+        vid.pause();
+        vid.src = '';
+        vid.load();
+        vid.remove();
+      }
+      return;
+    }
+    if (!vid) {
+      vid = document.createElement('video');
+      vid.id = 'htql-hindex-video-bg';
+      vid.style.cssText = [
+        'position:fixed', 'inset:0', 'width:100%', 'height:100%',
+        'object-fit:cover', 'z-index:0', 'pointer-events:none',
+        'will-change:transform', 'transform:translateZ(0)',
+      ].join(';');
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.disablePictureInPicture = true;
+      vid.preload = 'auto';
+      // Tạm dừng khi tab bị ẩn, resume khi tab hiện lại
+      document.addEventListener('visibilitychange', () => {
+        if (!document.getElementById('htql-hindex-video-bg')) return;
+        document.hidden ? vid.pause() : vid.play().catch(() => {});
+      });
+      document.body.insertBefore(vid, document.body.firstChild);
+    }
+    if (vid.dataset.src !== url) {
+      vid.src = url;
+      vid.dataset.src = url;
+      vid.play().catch(() => {});
+    }
+  }
+
   function resolveBgUrl(settings) {
     const bg = settings && settings.bgUrl;
     return bg && bg !== '' ? bg : DEFAULT_BG_URL;
@@ -387,7 +436,9 @@
       <div class="htql-hindex-shell">
         <header class="htql-hindex-topbar htql-hindex-card">
           <div class="htql-hindex-brand">
-            <div class="htql-hindex-brand-mark">CTU</div>
+            <div class="htql-hindex-brand-mark">
+              <img src="${chrome.runtime.getURL('logo.png')}" alt="CTU Logo" style="width:36px;height:36px;object-fit:contain;display:block;">
+            </div>
             <div class="htql-hindex-brand-copy">
               <div class="htql-hindex-brand-title">HỆ THỐNG QUẢN LÝ ĐẠI HỌC CẦN THƠ</div>
               <div class="htql-hindex-brand-subtitle">Portal Sinh viên &amp; Đào tạo</div>
@@ -492,11 +543,25 @@
           <span class="htql-hindex-panel-head-icon">${svgIcon('advisor')}</span>
           <span>CỐ VẤN HỌC TẬP</span>
         </div>
+        <div class="htql-hindex-advisor-grid">
+          <div class="htql-hindex-meta-row">
+            <div class="htql-hindex-meta-label">Mã cán bộ</div>
+            <div class="htql-hindex-meta-value">${data.advisor.id || '---'}</div>
+          </div>
+          <div class="htql-hindex-meta-row">
+            <div class="htql-hindex-meta-label">Họ và tên</div>
+            <div class="htql-hindex-meta-value">${data.advisor.name || '---'}</div>
+          </div>
+          <div class="htql-hindex-meta-row">
+            <div class="htql-hindex-meta-label">Email</div>
+            <div class="htql-hindex-meta-value">${data.advisor.email || '---'}</div>
+          </div>
+          <div class="htql-hindex-meta-row">
+            <div class="htql-hindex-meta-label">Điện thoại</div>
+            <div class="htql-hindex-meta-value">${data.advisor.phone || '---'}</div>
+          </div>
+        </div>
       `;
-      advisorCard.appendChild(makeInfoRow('Mã cán bộ', data.advisor.id));
-      advisorCard.appendChild(makeInfoRow('Họ và tên', data.advisor.name));
-      advisorCard.appendChild(makeInfoRow('Email', data.advisor.email));
-      advisorCard.appendChild(makeInfoRow('Điện thoại', data.advisor.phone));
     }
 
     const familyCard = rootQuery('#htql-hindex-family-card');
@@ -563,6 +628,8 @@
     const blur = s.glassBlur;
     const theme = s.themeColor;
     const text = s.textColor;
+    const heading = s.headingColor || theme;
+    const font = s.fontFamily || 'Plus Jakarta Sans';
     const bgUrl = resolveBgUrl(s);
     const cardBg = `rgba(255, 255, 255, ${opacity})`;
     const chipBg = `rgba(255, 255, 255, ${Math.min(opacity + 0.18, 0.92)})`;
@@ -570,10 +637,11 @@
     const sideBtnBg = `rgba(255, 255, 255, ${Math.max(opacity - 0.04, 0.16)})`;
 
     return `
-      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap');
 
       :root {
         --htql-hindex-blue: ${theme};
+        --htql-hindex-label: ${heading};
         --htql-hindex-ink: ${text};
         --htql-hindex-card: ${cardBg};
         --htql-hindex-border: rgba(255, 255, 255, 0.22);
@@ -592,8 +660,8 @@
         width: 100% !important;
         min-height: 100% !important;
         overflow: auto !important;
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-        background: ${cssBackgroundUrl(bgUrl)} center center / cover fixed no-repeat !important;
+        font-family: '${font}', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        background: ${isVideoUrl(bgUrl) ? 'transparent' : `${cssBackgroundUrl(bgUrl)} center center / cover fixed no-repeat`} !important;
       }
 
       body::before,
@@ -611,7 +679,7 @@
         -ms-overflow-style: none;
       }
 
-      body.htql-hindex-active > *:not(#${ROOT_ID}) {
+      body.htql-hindex-active > *:not(#${ROOT_ID}):not(#htql-hindex-video-bg) {
         display: none !important;
       }
 
@@ -637,7 +705,7 @@
       }
 
       .htql-hindex-shell {
-        width: min(1450px, calc(100vw - 20px));
+        width: min(1450px, 100%);
         margin: 0 auto;
         display: grid;
         gap: 14px;
@@ -671,13 +739,9 @@
         width: 46px;
         height: 46px;
         border-radius: 14px;
-        background: linear-gradient(180deg, ${themeTint(theme, 0.92)} 0%, ${theme} 100%);
-        color: #fff;
+        background: transparent;
         display: grid;
         place-items: center;
-        font-weight: 800;
-        font-size: 0.95rem;
-        box-shadow: 0 8px 18px ${themeTint(theme, 0.28)};
         flex: 0 0 auto;
       }
 
@@ -687,14 +751,14 @@
 
       .htql-hindex-brand-title {
         color: var(--htql-hindex-blue);
-        font-size: 1.18rem;
-        line-height: 1.3;
+        font-size: 1.05rem;
+        line-height: 1.4;
         font-weight: 800;
-        letter-spacing: -0.03em;
+        letter-spacing: 0em;
         text-transform: uppercase;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        white-space: normal;
+        overflow: visible;
+        word-break: break-word;
       }
 
       .htql-hindex-brand-subtitle {
@@ -777,9 +841,9 @@
       .htql-hindex-hero {
         grid-column: 1;
         grid-row: 1;
-        padding: 18px 20px 16px;
+        padding: 14px 20px 12px;
         border-radius: 24px;
-        min-height: 220px;
+        min-height: 160px;
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -804,10 +868,19 @@
       .htql-hindex-advisor-panel {
         grid-column: 2;
         grid-row: 1;
-        min-height: 220px;
+        min-height: 160px;
         height: 100%;
         display: flex;
         flex-direction: column;
+      }
+
+      .htql-hindex-advisor-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 16px;
+        margin-top: 8px;
+        flex: 1;
+        align-content: start;
       }
 
       .htql-hindex-functions {
@@ -840,8 +913,8 @@
         margin: 0;
         color: var(--htql-hindex-blue);
         font-size: clamp(2rem, 2.8vw, 3rem);
-        line-height: 1;
-        letter-spacing: -0.04em;
+        line-height: 1.1;
+        letter-spacing: 0.01em;
         font-weight: 800;
         text-transform: uppercase;
       }
@@ -949,7 +1022,7 @@
 
       .htql-hindex-meta-label {
         font-size: 0.62rem;
-        color: var(--htql-hindex-muted);
+        color: var(--htql-hindex-label);
         text-transform: uppercase;
         font-weight: 800;
         letter-spacing: 0.03em;
@@ -1130,8 +1203,7 @@
         }
 
         .htql-hindex-brand-title {
-          white-space: normal;
-          font-size: 1.06rem;
+          font-size: 1rem;
         }
 
         .htql-hindex-hero-inner {
@@ -1157,12 +1229,14 @@
 
   function removeLoadingState() {
     document.documentElement.classList.remove('htql-hindex-loading');
+    document.documentElement.style.background = '';
     if (loadingStyle.parentNode) loadingStyle.remove();
   }
 
   function applyTheme(settings) {
     currentSettings = { ...DEFAULTS, ...(settings || {}) };
     injectStyle(getCSS(currentSettings));
+    applyVideoBg(isVideoUrl(currentSettings.bgUrl) ? currentSettings.bgUrl : null);
   }
 
   function loadAndApplyTheme(done) {
@@ -1196,19 +1270,26 @@
     booted = true;
 
     disableOriginalCSS();
-    loadAndApplyTheme();
-    document.body.classList.add('htql-hindex-active');
+    loadAndApplyTheme(() => {
+      document.body.classList.add('htql-hindex-active');
 
-    const existingRoot = document.getElementById(ROOT_ID);
-    if (existingRoot) {
-      existingRoot.remove();
-    }
-    document.body.appendChild(buildShell(data));
-    document.body.style.margin = '0';
-    document.body.style.overflow = '';
-    document.documentElement.style.overflow = '';
+      const existingRoot = document.getElementById(ROOT_ID);
+      if (existingRoot) {
+        existingRoot.remove();
+      }
+      document.body.appendChild(buildShell(data));
+      document.body.style.margin = '0';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
 
-    removeLoadingState();
+      // Đảm bảo video nền luôn là con đầu tiên của body
+      const vid = document.getElementById('htql-hindex-video-bg');
+      if (vid && vid !== document.body.firstChild) {
+        document.body.insertBefore(vid, document.body.firstChild);
+      }
+
+      removeLoadingState();
+    });
   }
 
   if (chrome.storage && chrome.storage.onChanged) {
