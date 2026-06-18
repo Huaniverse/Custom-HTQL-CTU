@@ -18,9 +18,10 @@
     bgUrl: "",
     solidColor: "#1a1a2e",
     s101View: "graph",
+    enabled: true,
     effects: {
       leafFloat: true,
-      leafHover: true
+      leafHover: false
     }
   };
 
@@ -119,6 +120,7 @@
       glassColor: saved.glassColor || DEFAULTS.glassColor,
       solidColor: saved.solidColor || DEFAULTS.solidColor,
       s101View: saved.s101View || DEFAULTS.s101View,
+      enabled: saved.enabled !== false, // mặc định true
       effects: {
         ...DEFAULTS.effects,
         ...(saved.effects || {})
@@ -323,6 +325,8 @@
     document.querySelectorAll("#font-select-grid .font-option").forEach(opt => {
       opt.classList.toggle("active", opt.dataset.font === state.fontFamily);
     });
+
+    syncColorThemePresetUI();
   }
 
   // ============================================================
@@ -344,6 +348,7 @@
       renderEffectControls();
       syncEffectControls();
       updatePreview();
+      syncCustomFontInput();
     });
   }
 
@@ -404,6 +409,9 @@
     document.querySelectorAll(".s101-view-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.view === s101View);
     });
+
+    // Power toggle
+    syncPowerUI(state.enabled !== false);
   }
 
   // ============================================================
@@ -572,6 +580,51 @@
     });
   });
 
+  // ============================================================
+  // COLOR THEME PRESETS (bộ theme tổng hợp)
+  // ============================================================
+  function syncColorThemePresetUI() {
+    document.querySelectorAll("[data-theme-preset]").forEach(card => {
+      const match =
+        card.dataset.theme === state.themeColor &&
+        card.dataset.text === state.textColor &&
+        card.dataset.heading === state.headingColor;
+      card.classList.toggle("active", match);
+    });
+  }
+
+  document.querySelectorAll("[data-theme-preset]").forEach(card => {
+    card.addEventListener("click", () => {
+      const theme   = card.dataset.theme;
+      const text    = card.dataset.text;
+      const heading = card.dataset.heading;
+
+      state.themeColor   = theme;
+      state.textColor    = text;
+      state.headingColor = heading;
+
+      // Sync UI controls
+      themeColorInput.value = theme;
+      themeColorHex.textContent = theme.toUpperCase();
+      themeColorSwatch.style.background = theme;
+
+      textColorInput.value = text;
+      textColorHex.textContent = text.toUpperCase();
+      textColorSwatch.style.background = text;
+
+      if (headingColorInput) {
+        headingColorInput.value = heading;
+        headingColorHex.textContent = heading.toUpperCase();
+        headingColorSwatch.style.background = heading;
+      }
+
+      syncColorThemePresetUI();
+      updatePreview();
+      saveSettings();
+      showToast("✓ Theme: " + (card.title || card.dataset.themePreset));
+    });
+  });
+
   // Font family
   document.querySelectorAll("#font-select-grid .font-option").forEach(opt => {
     opt.addEventListener("click", () => {
@@ -584,6 +637,103 @@
       showToast("Font: " + font);
     });
   });
+
+  // ============================================================
+  // CUSTOM FONT (nhập tên hoặc link Google Fonts)
+  // ============================================================
+  const customFontInput   = $("custom-font-input");
+  const customFontApply   = $("custom-font-apply");
+  const customFontPreview = $("custom-font-preview");
+  const customFontPreviewText = $("custom-font-preview-text");
+
+  /**
+   * Từ link Google Fonts hoặc tên font thuần, trả về tên font
+   * Ví dụ: "https://fonts.google.com/specimen/Playfair+Display" → "Playfair Display"
+   * Ví dụ: "Playfair Display" → "Playfair Display"
+   */
+  function parseFontName(raw) {
+    raw = raw.trim();
+    // Link dạng fonts.google.com/specimen/Font+Name
+    const specimenMatch = raw.match(/fonts\.google\.com\/specimen\/([^?&#/]+)/i);
+    if (specimenMatch) {
+      return decodeURIComponent(specimenMatch[1]).replace(/\+/g, ' ');
+    }
+    // Link dạng fonts.googleapis.com/css?family=Font+Name
+    const apiMatch = raw.match(/family=([^:&|,]+)/i);
+    if (apiMatch) {
+      return decodeURIComponent(apiMatch[1]).replace(/\+/g, ' ').split(':')[0].trim();
+    }
+    // Tên font thuần
+    if (raw && !raw.startsWith('http')) return raw;
+    return null;
+  }
+
+  /**
+   * Tải font từ Google Fonts bằng cách inject @import vào popup
+   * rồi hiển thị preview
+   */
+  function applyCustomFont(fontName) {
+    if (!fontName) return;
+
+    // Inject @import để preview trong popup
+    let previewStyle = document.getElementById('htql-custom-font-preview-style');
+    if (!previewStyle) {
+      previewStyle = document.createElement('style');
+      previewStyle.id = 'htql-custom-font-preview-style';
+      document.head.appendChild(previewStyle);
+    }
+    const encoded = fontName.replace(/ /g, '+');
+    previewStyle.textContent = `@import url('https://fonts.googleapis.com/css2?family=${encoded}:wght@400;500;600;700&display=swap');`;
+
+    // Hiển thị preview
+    if (customFontPreview) {
+      customFontPreview.style.display = 'block';
+    }
+    if (customFontPreviewText) {
+      customFontPreviewText.style.fontFamily = `'${fontName}', sans-serif`;
+      customFontPreviewText.textContent = fontName + ' — Aa Bb Cc 123';
+    }
+
+    // Áp dụng vào state
+    state.fontFamily = fontName;
+    // Bỏ active tất cả font preset
+    document.querySelectorAll("#font-select-grid .font-option").forEach(o => {
+      o.classList.remove("active");
+    });
+    saveSettings();
+    showToast("✓ Font: " + fontName);
+  }
+
+  if (customFontApply) {
+    customFontApply.addEventListener("click", () => {
+      const raw = customFontInput ? customFontInput.value.trim() : '';
+      if (!raw) { showToast("Vui lòng nhập tên hoặc link font!", "error"); return; }
+      const fontName = parseFontName(raw);
+      if (!fontName) { showToast("Không nhận ra tên font!", "error"); return; }
+      applyCustomFont(fontName);
+    });
+  }
+
+  if (customFontInput) {
+    customFontInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") customFontApply && customFontApply.click();
+    });
+  }
+
+  // Khi load: nếu font hiện tại không có trong danh sách preset thì hiện vào input
+  function syncCustomFontInput() {
+    if (!customFontInput) return;
+    const presetFonts = Array.from(document.querySelectorAll("#font-select-grid .font-option"))
+      .map(o => o.dataset.font);
+    if (state.fontFamily && !presetFonts.includes(state.fontFamily)) {
+      customFontInput.value = state.fontFamily;
+      if (customFontPreview) customFontPreview.style.display = 'block';
+      if (customFontPreviewText) {
+        customFontPreviewText.style.fontFamily = `'${state.fontFamily}', sans-serif`;
+        customFontPreviewText.textContent = state.fontFamily + ' — Aa Bb Cc 123';
+      }
+    }
+  }
 
   if (effectsList) {
     effectsList.addEventListener("change", (event) => {
@@ -788,6 +938,52 @@
   // CLOSE
   // ============================================================
   btnClose.addEventListener("click", () => window.close());
+
+  // ============================================================
+  // POWER TOGGLE (bật/tắt toàn bộ extension)
+  // ============================================================
+  const powerSwitch   = $("power-switch");
+  const powerWrap     = $("power-toggle-wrap");
+  const powerStatus   = $("power-status");
+  const powerIcon     = $("power-icon");
+
+  function syncPowerUI(enabled) {
+    if (enabled) {
+      powerWrap.classList.add("on");
+      powerStatus.textContent = "Đang bật";
+      powerIcon.style.color = "var(--popup-accent)";
+    } else {
+      powerWrap.classList.remove("on");
+      powerStatus.textContent = "Đã tắt";
+      powerIcon.style.color = "rgba(239,68,68,0.7)";
+    }
+    if (powerSwitch) powerSwitch.checked = enabled;
+  }
+
+  if (powerSwitch) {
+    powerSwitch.addEventListener("change", () => {
+      state.enabled = powerSwitch.checked;
+      syncPowerUI(state.enabled);
+      chrome.storage.local.set({ enabled: state.enabled }, () => {
+        showToast(state.enabled ? "✓ Giao diện đã bật" : "Giao diện đã tắt");
+        // Reload tất cả tab đang mở khớp với các URL được inject
+        if (chrome.tabs) {
+          chrome.tabs.query({}, (tabs) => {
+            const patterns = [
+              /dkmh\.ctu\.edu\.vn\/htql\/sinhvien/,
+              /htql\.ctu\.edu\.vn/,
+              /accounts\.ctu\.edu\.vn/
+            ];
+            tabs.forEach((tab) => {
+              if (tab.url && patterns.some((p) => p.test(tab.url))) {
+                chrome.tabs.reload(tab.id);
+              }
+            });
+          });
+        }
+      });
+    });
+  }
 
   // ============================================================
   // INIT

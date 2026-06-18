@@ -34,9 +34,10 @@
     fontFamily: 'Plus Jakarta Sans',
     bgUrl: '',
     s101View: 'graph', // 'graph' | 'table'
+    enabled: true,
     effects: {
       leafFloat: true,
-      leafHover: true,
+      leafHover: false,
     },
   };
 
@@ -927,6 +928,14 @@
 
     return `
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+      ${(() => {
+        const presets = ['Plus Jakarta Sans','Inter','Be Vietnam Pro','Nunito','Lexend','DM Sans','Outfit','Roboto','Space Grotesk','Sora','Manrope'];
+        if (!presets.includes(font)) {
+          const encoded = font.replace(/ /g, '+');
+          return `@import url('https://fonts.googleapis.com/css2?family=${encoded}:wght@400;500;600;700;800&display=swap');`;
+        }
+        return '';
+      })()}
 
       :root {
         --htql-sindex-blue: ${theme};
@@ -2172,6 +2181,12 @@
               <span>TỔNG KẾT TÍN CHỈ</span>
             </div>
             <div class="htql-sindex-summary">${data.total}</div>
+            <div style="margin-top:12px;">
+              <button type="button" id="htql-s101-print" class="htql-s301-btn htql-s101-print-btn" style="width:100%;justify-content:center;">
+                ${svgIcon('print')}
+                <span>In/ Xuất ra file</span>
+              </button>
+            </div>
           </div>` : '<div></div>'}
         </div>
 
@@ -2200,7 +2215,7 @@
                   </thead>
                   <tbody>
                     ${data.rows.length > 0
-                      ? tableBodyRows + totalRow
+                      ? tableBodyRows
                       : '<tr><td colspan="4" style="text-align:center;padding:20px;opacity:0.6;">Không có dữ liệu</td></tr>'}
                   </tbody>
                 </table>
@@ -2208,12 +2223,8 @@
             </div>
           </div>
 
-          <div class="htql-s101-actions">
-            <button type="button" id="htql-s101-print" class="htql-s301-btn htql-s101-print-btn">
-              ${svgIcon('print')}
-              <span>In/ Xuất ra file</span>
-            </button>
           </div>
+
         </main>
       </div>
     `;
@@ -3024,12 +3035,13 @@
         <main class="htql-sindex-main" id="htql-sindex-main-content">
           <div class="htql-sindex-card htql-sindex-table-card" style="border-radius:20px;overflow:hidden;">
             <div class="htql-s301-table-title" style="padding:22px 24px 8px;">${data.title}</div>
-            <div class="htql-s301-toolbar">
+            <div class="htql-s301-toolbar" style="position:relative;">
               <span class="htql-s301-toolbar-label">Năm học</span>
               <select id="htql-s401-loc-namhoc" class="htql-s301-select" aria-label="Lọc năm học">${filterNamOpts}</select>
               <span class="htql-s301-toolbar-label">Học kỳ</span>
               <select id="htql-s401-loc-hocky" class="htql-s301-select" style="min-width:72px;" aria-label="Lọc học kỳ">${filterHkOpts}</select>
               <button type="button" id="htql-s401-lietke" class="htql-s301-btn htql-s301-btn-primary">Liệt kê</button>
+              <button type="button" id="htql-s401-save" class="htql-s301-btn htql-s301-btn-primary htql-s3011-btn-save" disabled style="position:absolute;right:16px;top:50%;transform:translateY(-50%);">Lưu</button>
             </div>
             <div class="htql-sindex-table-wrapper" style="border:none;border-radius:0;border-top:1px solid var(--htql-sindex-border);">
               <table class="htql-sindex-table htql-s301-table">
@@ -3049,9 +3061,6 @@
                   ${tableRows || '<tr><td colspan="8" style="text-align:center;padding:24px;opacity:0.6;">Không có học phần</td></tr>'}
                 </tbody>
               </table>
-            </div>
-            <div style="display:flex;justify-content:center;padding:16px 20px;border-top:1px solid var(--htql-sindex-border);gap:10px;">
-              <button type="button" id="htql-s401-save" class="htql-s301-btn htql-s301-btn-primary htql-s3011-btn-save" disabled>Lưu</button>
             </div>
           </div>
         </main>
@@ -3278,12 +3287,14 @@
         <div class="htql-sindex-top-row">
           ${buildAdvisorHTML(data.advisor)}
           ${buildNoticesHTML(data.notices)}
-          <div></div>
+          ${data.studentInfo ? `
+          <div class="htql-sindex-card htql-sindex-summary-card" style="display:flex;align-items:center;justify-content:center;">
+            <div style="padding:6px 24px 0;text-align:center;font-size:0.88rem;font-weight:600;color:var(--htql-sindex-ink);">${data.studentInfo}</div>
+          </div>` : '<div></div>'}
         </div>
         <main class="htql-sindex-main" id="htql-sindex-main-content">
           <div class="htql-sindex-card htql-sindex-table-card" style="border-radius:20px;overflow:hidden;">
             <div class="htql-s301-table-title" style="padding:22px 24px 8px;">${data.title}</div>
-            ${data.studentInfo ? `<div style="padding:6px 24px 0;text-align:center;font-size:0.88rem;font-weight:600;color:var(--htql-sindex-ink);">${data.studentInfo}</div>` : ''}
             <div class="htql-s301-toolbar" style="justify-content:center;gap:16px;">
               <span class="htql-s301-toolbar-label">Năm học</span>
               <select id="htql-s601-namhoc" class="htql-s301-select" aria-label="Năm học">${namOptions}</select>
@@ -3400,6 +3411,11 @@
   }
 
   function applySettings(settings) {
+    // Nếu extension bị tắt, restore trang gốc bằng reload
+    if (settings && settings.enabled === false) {
+      location.reload();
+      return;
+    }
     currentSettings = {
       ...currentSettings,
       ...settings,
@@ -3421,8 +3437,14 @@
   function boot() {
     if (booted) return;
     if (!document.body) { setTimeout(boot, 20); return; }
-    booted = true;
     chrome.storage.local.get(DEFAULTS, (settings) => {
+      // Nếu đang tắt, bỏ loading state và không inject gì
+      if (settings && settings.enabled === false) {
+        removeLoadingState();
+        document.documentElement.style.background = '';
+        return;
+      }
+      booted = true;
       applySettings(settings);
     });
   }
@@ -3430,6 +3452,12 @@
   if (chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
+      // Phản ứng ngay khi enabled thay đổi
+      if ('enabled' in changes) {
+        location.reload();
+        return;
+      }
+      if (!booted) return;
       chrome.storage.local.get(DEFAULTS, (settings) => {
         applySettings(settings);
       });

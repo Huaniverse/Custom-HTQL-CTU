@@ -593,6 +593,64 @@
       box-shadow: 0 0 0 3px rgba(255,255,255,0.2);
     }
 
+    /* ===== COLOR THEME PRESETS ===== */
+    .theme-preset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .theme-preset-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 6px 9px;
+      border-radius: var(--popup-radius-sm, 12px);
+      border: 1.5px solid var(--popup-border, rgba(255,255,255,0.12));
+      background: rgba(255,255,255,0.04);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.18s;
+    }
+
+    .theme-preset-card:hover {
+      border-color: rgba(125, 211, 252, 0.35);
+      background: rgba(125, 211, 252, 0.07);
+      transform: translateY(-1px);
+    }
+
+    .theme-preset-card.active {
+      border-color: var(--popup-accent, #7dd3fc);
+      background: rgba(125, 211, 252, 0.13);
+      box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.12);
+    }
+
+    .tpc-swatches {
+      display: flex;
+      gap: 3px;
+    }
+
+    .tpc-swatches span {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.18);
+      flex-shrink: 0;
+    }
+
+    .tpc-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--popup-muted, rgba(230,237,247,0.68));
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .theme-preset-card.active .tpc-name {
+      color: var(--popup-accent, #7dd3fc);
+    }
+
     /* Current bg info */
     .current-bg-info {
       display: flex;
@@ -1427,6 +1485,46 @@
       color: var(--popup-text) !important;
       border-color: var(--popup-border-strong) !important;
     }
+
+    /* ===== POWER TOGGLE ===== */
+    .power-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--popup-radius-xl);
+      border: 1px solid var(--popup-border);
+      background: linear-gradient(180deg, rgba(17,24,39,0.78), rgba(17,24,39,0.56));
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: var(--popup-shadow);
+    }
+    .power-toggle-label {
+      flex: 1;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--popup-muted);
+      transition: color 0.2s;
+    }
+    .power-toggle-wrap.on .power-toggle-label {
+      color: var(--popup-text);
+    }
+    .power-toggle-status {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(239,68,68,0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239,68,68,0.2);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .power-toggle-wrap.on .power-toggle-status {
+      background: rgba(34,197,94,0.15);
+      color: #86efac;
+      border-color: rgba(34,197,94,0.25);
+    }
   </style>
 </head>
 <body>
@@ -1446,6 +1544,17 @@
       </div>
     </div>
     <div class="header-badge">v1.4</div>
+  </div>
+
+  <!-- POWER TOGGLE -->
+  <div class="power-toggle-wrap on" id="power-toggle-wrap">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0;color:var(--popup-muted);transition:color 0.2s" id="power-icon"><path d="M12 2v6M4.93 4.93A10 10 0 1 0 19.07 4.93"/></svg>
+    <span class="power-toggle-label">Giao diện tùy chỉnh</span>
+    <span class="power-toggle-status" id="power-status">Đang bật</span>
+    <label class="switch" aria-label="Bật/tắt extension" style="margin-left:4px">
+      <input type="checkbox" id="power-switch" checked>
+      <span class="switch-slider"></span>
+    </label>
   </div>
 
   <!-- LIVE PREVIEW -->
@@ -1522,21 +1631,29 @@
         <div class="section-title">Màu kính (Glass Tint)</div>
         <div class="color-item" style="margin-bottom:0">
           <div class="color-item-label">Màu đổ cho hiệu ứng kính</div>
-          <div class="color-swatch-row">
-            <div class="color-swatch-btn" id="glass-color-swatch">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="color-swatch-btn" id="glass-color-swatch" style="flex-shrink:0;">
               <input type="color" id="glass-color-input" value="#ffffff">
             </div>
-            <span class="color-hex-display" id="glass-color-hex">#FFFFFF</span>
-          </div>
-          <div class="preset-colors">
-            <div class="preset-color-dot" data-preset-glass-color="#ffffff" style="background:#ffffff;border:1px solid rgba(255,255,255,0.3)" title="Trắng (mặc định)"></div>
-            <div class="preset-color-dot" data-preset-glass-color="#e0f2fe" style="background:#e0f2fe" title="Ice Blue"></div>
-            <div class="preset-color-dot" data-preset-glass-color="#dbeafe" style="background:#dbeafe" title="Blue Tint"></div>
-            <div class="preset-color-dot" data-preset-glass-color="#f0fdf4" style="background:#f0fdf4" title="Mint"></div>
-            <div class="preset-color-dot" data-preset-glass-color="#fef9c3" style="background:#fef9c3" title="Cream"></div>
-            <div class="preset-color-dot" data-preset-glass-color="#fce7f3" style="background:#fce7f3" title="Rose"></div>
-            <div class="preset-color-dot" data-preset-glass-color="#152550" style="background:#152550" title="CTU Navy"></div>
-            <div class="preset-color-dot" data-preset-glass-color="#000000" style="background:#000000" title="Đen"></div>
+            <span class="color-hex-display" id="glass-color-hex" style="min-width:62px;">#FFFFFF</span>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+              <div class="preset-color-dot" data-preset-glass-color="#ffffff" style="background:#ffffff;border:1px solid rgba(255,255,255,0.5)" title="Trắng (mặc định)"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#000000" style="background:#000000" title="Đen"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#ffb3ba" style="background:#ffb3ba" title="Pastel Đỏ"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#ffdfba" style="background:#ffdfba" title="Pastel Cam"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#ffffba" style="background:#ffffba" title="Pastel Vàng"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#baffc9" style="background:#baffc9" title="Pastel Xanh lá"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#bae1ff" style="background:#bae1ff" title="Pastel Xanh dương"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#c9baff" style="background:#c9baff" title="Pastel Chàm"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#f2baff" style="background:#f2baff" title="Pastel Tím"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#e0f2fe" style="background:#e0f2fe" title="Ice Blue"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#fce7f3" style="background:#fce7f3" title="Rose"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#f0fdf4" style="background:#f0fdf4" title="Mint"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#fef9c3" style="background:#fef9c3" title="Cream"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#152550" style="background:#152550" title="CTU Navy"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#1e1b4b" style="background:#1e1b4b" title="Deep Indigo"></div>
+              <div class="preset-color-dot" data-preset-glass-color="#064e3b" style="background:#064e3b" title="Forest Dark"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1556,67 +1673,268 @@
 
     <!-- COLORS PANEL -->
     <div class="panel" id="panel-colors">
-      <div class="color-grid" style="grid-template-columns: 1fr 1fr;">
-        <!-- Theme Color -->
+
+      <!-- THEME PRESETS -->
+      <div>
+        <div class="section-title">Bộ theme sẵn</div>
+        <div class="theme-preset-grid" id="color-theme-presets">
+
+          <button class="theme-preset-card" data-theme-preset="ctu"
+            data-theme="#152550" data-text="#1e293b" data-heading="#152550"
+            title="CTU Classic">
+            <div class="tpc-swatches">
+              <span style="background:#152550"></span>
+              <span style="background:#1e293b"></span>
+              <span style="background:#3b82f6"></span>
+            </div>
+            <span class="tpc-name">CTU Classic</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="ocean"
+            data-theme="#0e7490" data-text="#0c4a6e" data-heading="#0e7490"
+            title="Ocean">
+            <div class="tpc-swatches">
+              <span style="background:#0e7490"></span>
+              <span style="background:#0c4a6e"></span>
+              <span style="background:#67e8f9"></span>
+            </div>
+            <span class="tpc-name">Ocean</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="forest"
+            data-theme="#166534" data-text="#14532d" data-heading="#166534"
+            title="Forest">
+            <div class="tpc-swatches">
+              <span style="background:#166534"></span>
+              <span style="background:#14532d"></span>
+              <span style="background:#86efac"></span>
+            </div>
+            <span class="tpc-name">Forest</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="violet"
+            data-theme="#6d28d9" data-text="#3b0764" data-heading="#7c3aed"
+            title="Violet">
+            <div class="tpc-swatches">
+              <span style="background:#6d28d9"></span>
+              <span style="background:#3b0764"></span>
+              <span style="background:#c4b5fd"></span>
+            </div>
+            <span class="tpc-name">Violet</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="rose"
+            data-theme="#be123c" data-text="#4c0519" data-heading="#e11d48"
+            title="Rose">
+            <div class="tpc-swatches">
+              <span style="background:#be123c"></span>
+              <span style="background:#4c0519"></span>
+              <span style="background:#fda4af"></span>
+            </div>
+            <span class="tpc-name">Rose</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="amber"
+            data-theme="#92400e" data-text="#451a03" data-heading="#b45309"
+            title="Amber">
+            <div class="tpc-swatches">
+              <span style="background:#92400e"></span>
+              <span style="background:#451a03"></span>
+              <span style="background:#fcd34d"></span>
+            </div>
+            <span class="tpc-name">Amber</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="slate"
+            data-theme="#334155" data-text="#0f172a" data-heading="#475569"
+            title="Slate">
+            <div class="tpc-swatches">
+              <span style="background:#334155"></span>
+              <span style="background:#0f172a"></span>
+              <span style="background:#94a3b8"></span>
+            </div>
+            <span class="tpc-name">Slate</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="midnight"
+            data-theme="#818cf8" data-text="#e0e7ff" data-heading="#a5b4fc"
+            title="Midnight">
+            <div class="tpc-swatches">
+              <span style="background:#818cf8"></span>
+              <span style="background:#e0e7ff"></span>
+              <span style="background:#4f46e5"></span>
+            </div>
+            <span class="tpc-name">Midnight</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="pastel-rainbow"
+            data-theme="#ff8fab" data-text="#ba68c8" data-heading="#64b5f6"
+            title="Pastel Rainbow">
+            <div class="tpc-swatches">
+              <span style="background:#ff8fab"></span>
+              <span style="background:#77dd77"></span>
+              <span style="background:#64b5f6"></span>
+            </div>
+            <span class="tpc-name">Pastel 🌈</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="sunset"
+            data-theme="#ea580c" data-text="#7c2d12" data-heading="#f97316"
+            title="Sunset">
+            <div class="tpc-swatches">
+              <span style="background:#ea580c"></span>
+              <span style="background:#7c2d12"></span>
+              <span style="background:#fdba74"></span>
+            </div>
+            <span class="tpc-name">Sunset</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="mint"
+            data-theme="#059669" data-text="#064e3b" data-heading="#10b981"
+            title="Mint">
+            <div class="tpc-swatches">
+              <span style="background:#059669"></span>
+              <span style="background:#064e3b"></span>
+              <span style="background:#6ee7b7"></span>
+            </div>
+            <span class="tpc-name">Mint</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="pink"
+            data-theme="#db2777" data-text="#831843" data-heading="#ec4899"
+            title="Pink">
+            <div class="tpc-swatches">
+              <span style="background:#db2777"></span>
+              <span style="background:#831843"></span>
+              <span style="background:#f9a8d4"></span>
+            </div>
+            <span class="tpc-name">Pink</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="sky"
+            data-theme="#0284c7" data-text="#0c4a6e" data-heading="#38bdf8"
+            title="Sky">
+            <div class="tpc-swatches">
+              <span style="background:#0284c7"></span>
+              <span style="background:#0c4a6e"></span>
+              <span style="background:#7dd3fc"></span>
+            </div>
+            <span class="tpc-name">Sky</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="dark"
+            data-theme="#e2e8f0" data-text="#f8fafc" data-heading="#94a3b8"
+            title="Dark Mode">
+            <div class="tpc-swatches">
+              <span style="background:#e2e8f0"></span>
+              <span style="background:#f8fafc"></span>
+              <span style="background:#475569"></span>
+            </div>
+            <span class="tpc-name">Dark Mode</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="coral"
+            data-theme="#e85d4a" data-text="#7f1d1d" data-heading="#f87171"
+            title="Coral">
+            <div class="tpc-swatches">
+              <span style="background:#e85d4a"></span>
+              <span style="background:#7f1d1d"></span>
+              <span style="background:#fca5a5"></span>
+            </div>
+            <span class="tpc-name">Coral</span>
+          </button>
+
+          <button class="theme-preset-card" data-theme-preset="indigo"
+            data-theme="#4338ca" data-text="#1e1b4b" data-heading="#6366f1"
+            title="Indigo">
+            <div class="tpc-swatches">
+              <span style="background:#4338ca"></span>
+              <span style="background:#1e1b4b"></span>
+              <span style="background:#a5b4fc"></span>
+            </div>
+            <span class="tpc-name">Indigo</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Theme Color — full width row -->
+      <div class="color-grid" style="grid-template-columns: 1fr;">
         <div class="color-item">
           <div class="color-item-label">Màu chủ đề</div>
-          <div class="color-swatch-row">
-            <div class="color-swatch-btn" id="theme-color-swatch">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="color-swatch-btn" id="theme-color-swatch" style="flex-shrink:0;">
               <input type="color" id="theme-color" value="#152550">
             </div>
-            <span class="color-hex-display" id="theme-color-hex">#152550</span>
-          </div>
-          <div class="preset-colors" id="theme-presets">
-            <div class="preset-color-dot" style="background:#152550" data-color="#152550" title="CTU Navy"></div>
-            <div class="preset-color-dot" style="background:#1d4ed8" data-color="#1d4ed8" title="Royal Blue"></div>
-            <div class="preset-color-dot" style="background:#0f766e" data-color="#0f766e" title="Teal"></div>
-            <div class="preset-color-dot" style="background:#7c3aed" data-color="#7c3aed" title="Purple"></div>
-            <div class="preset-color-dot" style="background:#b91c1c" data-color="#b91c1c" title="Red"></div>
-            <div class="preset-color-dot" style="background:#b45309" data-color="#b45309" title="Amber"></div>
-            <div class="preset-color-dot" style="background:#0e7490" data-color="#0e7490" title="Cyan"></div>
-            <div class="preset-color-dot" style="background:#1e293b" data-color="#1e293b" title="Slate"></div>
-          </div>
-        </div>
-        <!-- Text Color -->
-        <div class="color-item">
-          <div class="color-item-label">Màu chữ</div>
-          <div class="color-swatch-row">
-            <div class="color-swatch-btn" id="text-color-swatch">
-              <input type="color" id="text-color" value="#1e293b">
+            <span class="color-hex-display" id="theme-color-hex" style="min-width:62px;">#152550</span>
+            <div id="theme-presets" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+              <div class="preset-color-dot" style="background:#152550" data-color="#152550" title="CTU Navy"></div>
+              <div class="preset-color-dot" style="background:#ffffff;border:1px solid rgba(255,255,255,0.5)" data-color="#ffffff" title="Trắng"></div>
+              <div class="preset-color-dot" style="background:#000000" data-color="#000000" title="Đen"></div>
+              <div class="preset-color-dot" style="background:#ff8fab" data-color="#ff8fab" title="Pastel Hồng (Đỏ)"></div>
+              <div class="preset-color-dot" style="background:#ffb347" data-color="#ffb347" title="Pastel Cam"></div>
+              <div class="preset-color-dot" style="background:#ffe066" data-color="#ffe066" title="Pastel Vàng"></div>
+              <div class="preset-color-dot" style="background:#77dd77" data-color="#77dd77" title="Pastel Xanh lá"></div>
+              <div class="preset-color-dot" style="background:#64b5f6" data-color="#64b5f6" title="Pastel Xanh dương"></div>
+              <div class="preset-color-dot" style="background:#7986cb" data-color="#7986cb" title="Pastel Chàm"></div>
+              <div class="preset-color-dot" style="background:#ba68c8" data-color="#ba68c8" title="Pastel Tím"></div>
+              <div class="preset-color-dot" style="background:#1d4ed8" data-color="#1d4ed8" title="Royal Blue"></div>
+              <div class="preset-color-dot" style="background:#0f766e" data-color="#0f766e" title="Teal"></div>
             </div>
-            <span class="color-hex-display" id="text-color-hex">#1E293B</span>
-          </div>
-          <div class="preset-colors" id="text-presets">
-            <div class="preset-color-dot" style="background:#1e293b" data-color="#1e293b" title="Slate Dark"></div>
-            <div class="preset-color-dot" style="background:#111827" data-color="#111827" title="Gray 900"></div>
-            <div class="preset-color-dot" style="background:#1e3a5f" data-color="#1e3a5f" title="Navy Text"></div>
-            <div class="preset-color-dot" style="background:#374151" data-color="#374151" title="Gray 700"></div>
-            <div class="preset-color-dot" style="background:#064e3b" data-color="#064e3b" title="Emerald"></div>
-            <div class="preset-color-dot" style="background:#ffffff" data-color="#ffffff" title="White"></div>
           </div>
         </div>
       </div>
+
+      <!-- Text Color — full width row -->
+      <div class="color-grid" style="grid-template-columns: 1fr;">
+        <div class="color-item">
+          <div class="color-item-label">Màu chữ</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="color-swatch-btn" id="text-color-swatch" style="flex-shrink:0;">
+              <input type="color" id="text-color" value="#1e293b">
+            </div>
+            <span class="color-hex-display" id="text-color-hex" style="min-width:62px;">#1E293B</span>
+            <div id="text-presets" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+              <div class="preset-color-dot" style="background:#1e293b" data-color="#1e293b" title="Slate Dark"></div>
+              <div class="preset-color-dot" style="background:#ffffff;border:1px solid rgba(255,255,255,0.5)" data-color="#ffffff" title="Trắng"></div>
+              <div class="preset-color-dot" style="background:#000000" data-color="#000000" title="Đen"></div>
+              <div class="preset-color-dot" style="background:#ff8fab" data-color="#ff8fab" title="Pastel Hồng"></div>
+              <div class="preset-color-dot" style="background:#ffb347" data-color="#ffb347" title="Pastel Cam"></div>
+              <div class="preset-color-dot" style="background:#ffe066" data-color="#ffe066" title="Pastel Vàng"></div>
+              <div class="preset-color-dot" style="background:#77dd77" data-color="#77dd77" title="Pastel Xanh lá"></div>
+              <div class="preset-color-dot" style="background:#64b5f6" data-color="#64b5f6" title="Pastel Xanh dương"></div>
+              <div class="preset-color-dot" style="background:#7986cb" data-color="#7986cb" title="Pastel Chàm"></div>
+              <div class="preset-color-dot" style="background:#ba68c8" data-color="#ba68c8" title="Pastel Tím"></div>
+              <div class="preset-color-dot" style="background:#111827" data-color="#111827" title="Gray 900"></div>
+              <div class="preset-color-dot" style="background:#374151" data-color="#374151" title="Gray 700"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Heading Color — full width -->
       <div class="color-grid" style="grid-template-columns: 1fr;">
         <div class="color-item">
           <div class="color-item-label">Màu nhãn trường thông tin</div>
-          <div class="color-swatch-row">
-            <div class="color-swatch-btn" id="heading-color-swatch">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="color-swatch-btn" id="heading-color-swatch" style="flex-shrink:0;">
               <input type="color" id="heading-color" value="#152550">
             </div>
-            <span class="color-hex-display" id="heading-color-hex">#152550</span>
-          </div>
-          <div class="preset-colors" id="heading-presets">
-            <div class="preset-color-dot" style="background:#152550" data-color="#152550" title="CTU Navy"></div>
-            <div class="preset-color-dot" style="background:#1d4ed8" data-color="#1d4ed8" title="Royal Blue"></div>
-            <div class="preset-color-dot" style="background:#0f766e" data-color="#0f766e" title="Teal"></div>
-            <div class="preset-color-dot" style="background:#7c3aed" data-color="#7c3aed" title="Purple"></div>
-            <div class="preset-color-dot" style="background:#b91c1c" data-color="#b91c1c" title="Red"></div>
-            <div class="preset-color-dot" style="background:#b45309" data-color="#b45309" title="Amber"></div>
-            <div class="preset-color-dot" style="background:#0e7490" data-color="#0e7490" title="Cyan"></div>
-            <div class="preset-color-dot" style="background:#059669" data-color="#059669" title="Emerald"></div>
-            <div class="preset-color-dot" style="background:#db2777" data-color="#db2777" title="Pink"></div>
-            <div class="preset-color-dot" style="background:#64748b" data-color="#64748b" title="Slate"></div>
+            <span class="color-hex-display" id="heading-color-hex" style="min-width:62px;">#152550</span>
+            <div id="heading-presets" style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+              <div class="preset-color-dot" style="background:#152550" data-color="#152550" title="CTU Navy"></div>
+              <div class="preset-color-dot" style="background:#ffffff;border:1px solid rgba(255,255,255,0.5)" data-color="#ffffff" title="Trắng"></div>
+              <div class="preset-color-dot" style="background:#000000" data-color="#000000" title="Đen"></div>
+              <div class="preset-color-dot" style="background:#ff8fab" data-color="#ff8fab" title="Pastel Hồng"></div>
+              <div class="preset-color-dot" style="background:#ffb347" data-color="#ffb347" title="Pastel Cam"></div>
+              <div class="preset-color-dot" style="background:#ffe066" data-color="#ffe066" title="Pastel Vàng"></div>
+              <div class="preset-color-dot" style="background:#77dd77" data-color="#77dd77" title="Pastel Xanh lá"></div>
+              <div class="preset-color-dot" style="background:#64b5f6" data-color="#64b5f6" title="Pastel Xanh dương"></div>
+              <div class="preset-color-dot" style="background:#7986cb" data-color="#7986cb" title="Pastel Chàm"></div>
+              <div class="preset-color-dot" style="background:#ba68c8" data-color="#ba68c8" title="Pastel Tím"></div>
+              <div class="preset-color-dot" style="background:#1d4ed8" data-color="#1d4ed8" title="Royal Blue"></div>
+              <div class="preset-color-dot" style="background:#0f766e" data-color="#0f766e" title="Teal"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1638,6 +1956,22 @@
           <div class="font-option" data-font="Space Grotesk" style="font-family:'Space Grotesk',sans-serif">Space Grotesk</div>
           <div class="font-option" data-font="Sora" style="font-family:'Sora',sans-serif">Sora</div>
           <div class="font-option" data-font="Manrope" style="font-family:'Manrope',sans-serif">Manrope</div>
+        </div>
+      </div>
+      <!-- Custom font link -->
+      <div>
+        <div class="section-title">Font tùy chỉnh</div>
+        <div style="font-size:11px;color:var(--popup-muted);margin-bottom:8px;">
+          Dán link Google Fonts hoặc nhập tên font. Ví dụ: <code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;">Playfair Display</code>
+        </div>
+        <div class="url-input-wrap" style="margin-top:0;">
+          <input id="custom-font-input" class="url-input" type="text"
+            placeholder="https://fonts.google.com/specimen/... hoặc tên font">
+          <button id="custom-font-apply" class="url-apply-btn">Áp dụng</button>
+        </div>
+        <div id="custom-font-preview" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--popup-border);">
+          <span style="font-size:11px;color:var(--popup-muted);">Xem trước: </span>
+          <span id="custom-font-preview-text" style="font-size:14px;font-weight:600;"></span>
         </div>
       </div>
     </div>

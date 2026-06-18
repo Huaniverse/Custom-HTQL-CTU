@@ -42,22 +42,43 @@ Giao diện được tùy biến toàn bộ cho các trang con:
 **Dạng đồ thị S101 (KHHT toàn khóa):**
 - Mỗi học kỳ là một cluster node nằm xen kẽ trái/phải.
 - Mỗi học phần là một "lá" kết nối với node qua đường SVG.
-- Hiệu ứng **học phần lơ lửng** (gravity float) và **hover tương tác** — bật/tắt được trong popup.
+- Hiệu ứng **học phần lơ lửng** (gravity float) — bật/tắt trong popup.
+- Hiệu ứng **hover chuột** (3D tilt) — mặc định **tắt**, bật trong popup nếu muốn.
 - Nút In / Xuất ra file.
 
 ### Popup cấu hình (6 tab)
 
 | Tab | Chức năng |
 |-----|-----------|
-| **Glass** | Điều chỉnh Glass Opacity và Backdrop Blur; preset nhanh 4 mức (Trong nhẹ / Cân bằng / Đục mờ / Rõ ràng); chọn màu kính (Glass Tint) |
-| **Màu sắc** | Màu chủ đề, màu chữ (2 cột), màu nhãn trường thông tin (full width); mỗi trường có bộ preset dots |
-| **Font** | 11 font Google Fonts: Plus Jakarta Sans, Inter, Be Vietnam Pro, Nunito, Lexend, DM Sans, Outfit, Roboto, Space Grotesk, Sora, Manrope |
+| **Glass** | Điều chỉnh Glass Opacity và Backdrop Blur; preset nhanh 4 mức (Trong nhẹ / Cân bằng / Đục mờ / Rõ ràng); chọn màu kính (Glass Tint) với bộ pastel 7 màu cầu vồng + trắng + đen + các tone thực dụng |
+| **Màu sắc** | 16 bộ theme sẵn; 3 bộ preset màu (chủ đề / chữ / nhãn) — mỗi bộ hiện swatch và dots trên cùng 1 hàng, gồm trắng + đen + 7 pastel cầu vồng |
+| **Font** | 11 font Google Fonts: Plus Jakarta Sans, Inter, Be Vietnam Pro, Nunito, Lexend, DM Sans, Outfit, Roboto, Space Grotesk, Sora, Manrope; hỗ trợ nhập font tùy chỉnh qua tên hoặc link Google Fonts |
 | **Bố cục** | Chọn kiểu hiển thị trang KHHT toàn khóa: **Dạng bảng** hoặc **Dạng đồ thị** |
-| **Hiệu ứng** | Bật/tắt hiệu ứng học phần lơ lửng và hover chuột trên S101 |
+| **Hiệu ứng** | Bật/tắt hiệu ứng học phần lơ lửng và hover chuột trên S101 (hover mặc định tắt) |
 | **Ảnh nền** | Upload ảnh (≤4.5MB) hoặc video (≤50MB), dán URL, chọn preset thumbnail (4 cột), đặt màu nền solid |
 
 - Popup rộng 480px, thanh cuộn ẩn.
 - Tất cả thay đổi lưu vào `chrome.storage.local` và áp dụng real-time không cần tải lại trang.
+
+#### Bộ theme màu sẵn (16 theme)
+
+CTU Classic · Ocean · Forest · Violet · Rose · Amber · Slate · Midnight · Pastel 🌈 · Sunset · Mint · Pink · Sky · Dark Mode · Coral · Indigo
+
+#### Bộ màu pastel cầu vồng (preset dots)
+
+Mỗi bộ preset màu (chủ đề / chữ / nhãn) đều có đầy đủ:
+
+| Màu | Hex |
+|-----|-----|
+| Trắng | `#ffffff` |
+| Đen | `#000000` |
+| Pastel Hồng (Đỏ) | `#ff8fab` |
+| Pastel Cam | `#ffb347` |
+| Pastel Vàng | `#ffe066` |
+| Pastel Xanh lá | `#77dd77` |
+| Pastel Xanh dương | `#64b5f6` |
+| Pastel Chàm | `#7986cb` |
+| Pastel Tím | `#ba68c8` |
 
 ---
 
@@ -80,11 +101,11 @@ Giao diện được tùy biến toàn bộ cho các trang con:
 
 1. Bấm icon extension trên thanh công cụ để mở popup.
 2. Chỉnh theo 6 tab:
-   - **Glass** — kéo slider opacity/blur hoặc chọn preset nhanh; chọn màu tint cho hiệu ứng kính.
-   - **Màu sắc** — click swatch hoặc dot để đổi màu chủ đề, màu chữ, màu nhãn.
-   - **Font** — click chọn một trong 11 font.
+   - **Glass** — kéo slider opacity/blur hoặc chọn preset nhanh; chọn màu tint cho hiệu ứng kính từ bảng màu pastel hoặc tone đậm.
+   - **Màu sắc** — chọn nhanh 1 trong 16 bộ theme, hoặc tùy chỉnh riêng từng màu bằng swatch / dot preset trên cùng hàng.
+   - **Font** — click chọn một trong 11 font có sẵn, hoặc nhập tên/link Google Fonts tùy chỉnh.
    - **Bố cục** — chọn kiểu hiển thị KHHT toàn khóa (bảng / đồ thị).
-   - **Hiệu ứng** — bật/tắt hiệu ứng học phần lơ lửng và hover.
+   - **Hiệu ứng** — bật/tắt học phần lơ lửng và hover chuột (hover tắt theo mặc định).
    - **Ảnh nền** — upload file, dán URL, chọn preset hoặc đặt màu solid.
 3. Mọi thay đổi tự động lưu và áp dụng ngay.
 
@@ -115,6 +136,7 @@ Giao diện được tùy biến toàn bộ cho các trang con:
 - Đồ thị S101 dùng absolute positioning + SVG lines tính toán bằng JS sau khi DOM render xong.
 - `headingColor` điều khiển màu nhãn trường thông tin, độc lập với màu chủ đề.
 - `s101View` (`'graph'` | `'table'`) lưu trong `chrome.storage.local`, đồng bộ giữa popup và trang.
+- `effects.leafHover` mặc định `false`; `effects.leafFloat` mặc định `true`.
 - Thanh cuộn ẩn toàn bộ: `scrollbar-width: none` + `::-webkit-scrollbar { display: none }`.
 - Font load qua một `@import` duy nhất gồm tất cả 11 font, tránh request thừa.
 - 2 nút Trang chủ / Thoát dùng `transform: translateZ(0)` + `isolation: isolate` để tránh chớp khi hover nav do repaint `backdrop-filter`.

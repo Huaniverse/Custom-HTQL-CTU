@@ -14,7 +14,8 @@
     themeColor: "#152550",
     textColor: "#1E293B",
     fontFamily: "Plus Jakarta Sans",
-    bgUrl: ""
+    bgUrl: "",
+    enabled: true,
   };
 
   // ============================================================
@@ -150,6 +151,15 @@
     style.textContent = `
       /* --- Thiết lập nền tảng --- */
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap');
+      ${(() => {
+        const presets = ['Plus Jakarta Sans','Inter','Be Vietnam Pro','Nunito','Lexend','DM Sans','Outfit','Roboto','Space Grotesk','Sora','Manrope'];
+        const f = s.fontFamily || DEFAULTS.fontFamily;
+        if (!presets.includes(f)) {
+          const encoded = f.replace(/ /g, '+');
+          return `@import url('https://fonts.googleapis.com/css2?family=${encoded}:wght@400;500;600;700;800&display=swap');`;
+        }
+        return '';
+      })()}
 
       :root {
         --theme-glass-opacity: ${opacity};
@@ -826,6 +836,7 @@
   function loadAndApplyTheme() {
     if (chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(DEFAULTS, (settings) => {
+        if (settings && settings.enabled === false) return;
         disableOriginalCSS();
         injectCustomCSS(settings);
         applyBackground(settings);
@@ -842,7 +853,13 @@
   if (chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
+      if ('enabled' in changes) {
+        // Reload khi bật hoặc tắt để trang phản ánh đúng trạng thái
+        location.reload();
+        return;
+      }
       chrome.storage.local.get(DEFAULTS, (settings) => {
+        if (settings && settings.enabled === false) return;
         injectCustomCSS(settings);
         applyBackground(settings);
       });
@@ -863,11 +880,6 @@
     }
   }
 
-  // Chạy sớm nhất có thể — chỉ disable CSS gốc, đặt màu nền tạm
-  // để tránh flash trang trắng trước khi storage callback trả về
-  disableOriginalCSS();
-  document.documentElement.style.background = '#0a0f1e';
-
   // MutationObserver: giữ theme & xử lý DOM động
   let observerThrottle = false;
   observer = new MutationObserver(() => {
@@ -880,18 +892,37 @@
     });
   });
 
-  reconnectObserver();
+  // Khởi động: kiểm tra enabled trước, chỉ inject nếu được bật
+  chrome.storage.local.get({ enabled: true }, (result) => {
+    if (result.enabled === false) {
+      // Extension bị tắt — không làm gì, để trang hiển thị CSS gốc bình thường
+      return;
+    }
 
-  // Khi DOM sẵn sàng: load settings và apply (xóa màu nền tạm)
-  document.addEventListener("DOMContentLoaded", () => {
-    document.documentElement.style.background = '';
-    loadAndApplyTheme();
-  });
-  window.addEventListener("load", () => {
-    document.documentElement.style.background = '';
-    loadAndApplyTheme();
-    setTimeout(loadAndApplyTheme, 1000);
-    setTimeout(loadAndApplyTheme, 3000);
+    // Chạy sớm nhất có thể — disable CSS gốc, đặt màu nền tạm
+    // để tránh flash trang trắng trước khi storage callback trả về
+    disableOriginalCSS();
+    document.documentElement.style.background = '#0a0f1e';
+
+    reconnectObserver();
+
+    // Khi DOM sẵn sàng: load settings và apply (xóa màu nền tạm)
+    document.addEventListener("DOMContentLoaded", () => {
+      document.documentElement.style.background = '';
+      loadAndApplyTheme();
+    });
+    window.addEventListener("load", () => {
+      document.documentElement.style.background = '';
+      loadAndApplyTheme();
+      setTimeout(loadAndApplyTheme, 1000);
+      setTimeout(loadAndApplyTheme, 3000);
+    });
+
+    // Nếu DOM đã sẵn sàng rồi (script chạy muộn)
+    if (document.readyState === 'interactive' || document.readyState === 'complete') {
+      document.documentElement.style.background = '';
+      loadAndApplyTheme();
+    }
   });
 
 })();

@@ -24,6 +24,7 @@
     headingColor: '#152550',
     fontFamily: 'Plus Jakarta Sans',
     bgUrl: '',
+    enabled: true,
   };
 
   let booted = false;
@@ -555,6 +556,14 @@
 
     return `
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap');
+      ${(() => {
+        const presets = ['Plus Jakarta Sans','Inter','Be Vietnam Pro','Nunito','Lexend','DM Sans','Outfit','Roboto','Space Grotesk','Sora','Manrope'];
+        if (!presets.includes(font)) {
+          const encoded = font.replace(/ /g, '+');
+          return `@import url('https://fonts.googleapis.com/css2?family=${encoded}:wght@400;500;600;700;800&display=swap');`;
+        }
+        return '';
+      })()}
 
       :root {
         --htql-hindex-blue: ${theme};
@@ -1051,6 +1060,10 @@
   function loadAndApplyTheme(done) {
     if (chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(DEFAULTS, (saved) => {
+        if (saved && saved.enabled === false) {
+          if (typeof done === 'function') done(saved);
+          return;
+        }
         applyTheme(saved);
         if (typeof done === 'function') done(saved);
       });
@@ -1076,34 +1089,47 @@
       return;
     }
 
-    booted = true;
-
-    disableOriginalCSS();
-    loadAndApplyTheme(() => {
-      document.body.classList.add('htql-hindex-active');
-
-      const existingRoot = document.getElementById(ROOT_ID);
-      if (existingRoot) {
-        existingRoot.remove();
-      }
-      document.body.appendChild(buildShell(data));
-      document.body.style.margin = '0';
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-
-      // Đảm bảo video nền luôn là con đầu tiên của body
-      const vid = document.getElementById('htql-hindex-video-bg');
-      if (vid && vid !== document.body.firstChild) {
-        document.body.insertBefore(vid, document.body.firstChild);
+    // Check enabled trước khi inject
+    chrome.storage.local.get({ enabled: true }, ({ enabled }) => {
+      if (enabled === false) {
+        removeLoadingState();
+        document.documentElement.style.background = '';
+        return;
       }
 
-      removeLoadingState();
+      booted = true;
+      disableOriginalCSS();
+      loadAndApplyTheme(() => {
+        document.body.classList.add('htql-hindex-active');
+
+        const existingRoot = document.getElementById(ROOT_ID);
+        if (existingRoot) {
+          existingRoot.remove();
+        }
+        document.body.appendChild(buildShell(data));
+        document.body.style.margin = '0';
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+
+        // Đảm bảo video nền luôn là con đầu tiên của body
+        const vid = document.getElementById('htql-hindex-video-bg');
+        if (vid && vid !== document.body.firstChild) {
+          document.body.insertBefore(vid, document.body.firstChild);
+        }
+
+        removeLoadingState();
+      });
     });
   }
 
   if (chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area !== 'local' || !booted) return;
+      if (area !== 'local') return;
+      if ('enabled' in changes) {
+        location.reload();
+        return;
+      }
+      if (!booted) return;
       loadAndApplyTheme();
     });
   }
