@@ -17,6 +17,7 @@
     fontFamily: "Plus Jakarta Sans",
     bgUrl: "",
     solidColor: "#1a1a2e",
+    s101View: "graph",
     effects: {
       leafFloat: true,
       leafHover: true
@@ -36,8 +37,8 @@
   const EFFECT_DEFS = [
     {
       key: "leafFloat",
-      title: "Lá lơ lửng",
-      desc: "Dao động nhẹ cho các lá học phần trên trang S101. Có thể tắt nếu muốn giao diện tĩnh hơn."
+      title: "Học phần lơ lửng",
+      desc: "Dao động nhẹ cho các học phần trên trang KHHT toàn khóa. Có thể tắt nếu muốn giao diện tĩnh hơn."
     },
     {
       key: "leafHover",
@@ -117,6 +118,7 @@
       ...saved,
       glassColor: saved.glassColor || DEFAULTS.glassColor,
       solidColor: saved.solidColor || DEFAULTS.solidColor,
+      s101View: saved.s101View || DEFAULTS.s101View,
       effects: {
         ...DEFAULTS.effects,
         ...(saved.effects || {})
@@ -396,6 +398,12 @@
     });
 
     syncEffectControls();
+
+    // S101 view mode
+    const s101View = state.s101View || "graph";
+    document.querySelectorAll(".s101-view-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.view === s101View);
+    });
   }
 
   // ============================================================
@@ -590,6 +598,19 @@
       saveSettings();
     });
   }
+
+  // S101 View Mode toggle
+  document.querySelectorAll(".s101-view-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const view = btn.dataset.view;
+      state.s101View = view;
+      document.querySelectorAll(".s101-view-btn").forEach(b => {
+        b.classList.toggle("active", b.dataset.view === view);
+      });
+      saveSettings();
+      showToast("S101: " + (view === "graph" ? "Dạng đồ thị" : "Dạng bảng"));
+    });
+  });
 
   // ============================================================
   // BACKGROUND - FILE UPLOAD

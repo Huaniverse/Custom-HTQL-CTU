@@ -19,6 +19,10 @@
   const IS_S101 = CURRENT_MID === 'S101';
   const IS_S301 = CURRENT_MID === 'S301';
   const IS_S3011 = CURRENT_MID === 'S3011';
+  const IS_S3012 = CURRENT_MID === 'S3012';
+  const IS_S3013 = CURRENT_MID === 'S3013';
+  const IS_S401 = CURRENT_MID === 'S401';
+  const IS_S601 = CURRENT_MID === 'S601';
 
   const DEFAULTS = {
     glassOpacity: 0.3,
@@ -29,6 +33,7 @@
     headingColor: '#152550',
     fontFamily: 'Plus Jakarta Sans',
     bgUrl: '',
+    s101View: 'graph', // 'graph' | 'table'
     effects: {
       leafFloat: true,
       leafHover: true,
@@ -921,7 +926,7 @@
     const tileBg = gc(glassHex, Math.max(opacity - 0.02, 0.12));
 
     return `
-      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
 
       :root {
         --htql-sindex-blue: ${theme};
@@ -1683,6 +1688,22 @@
         opacity: 0.45;
         cursor: not-allowed;
       }
+
+      /* ── S601 HỌP LỚP PRINT BTN ────────────────── */
+      .htql-s601-print-btn {
+        display: inline-grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--htql-sindex-border);
+        border-radius: 10px;
+        background: var(--htql-sindex-chip-bg);
+        color: var(--htql-sindex-blue);
+        cursor: pointer;
+        transition: background 0.18s ease;
+      }
+      .htql-s601-print-btn:hover { background: ${gc(glassHex, 0.75)}; }
+      .htql-s601-print-btn svg { width: 16px; height: 16px; fill: currentColor; }
     `;
   }
 
@@ -1992,7 +2013,7 @@
     location.href = url;
   }
 
-  function setupS101Actions(root) {
+  function setupS101Actions(root, data) {
     root.querySelector('#htql-s101-print')?.addEventListener('click', (event) => {
       event.preventDefault();
       if (typeof window.printTL === 'function') {
@@ -2092,6 +2113,7 @@
       groupMap.get(key).rows.push(row);
     });
 
+    // ── Dạng Graph (timeline cluster) ────────────────────────────────────
     const clusterHTML = groups.map((group, i) => {
       const side = i % 2 === 0 ? 'left' : 'right';
       const totalTC = group.rows.reduce((sum, r) => sum + (parseFloat(r.soTC) || 0), 0);
@@ -2107,6 +2129,32 @@
       `);
       return buildClusterHTML(nodeHTML, leafHTMLs, side, i);
     }).join('');
+
+    // ── Dạng Bảng (grouped table) ─────────────────────────────────────────
+    const tableBodyRows = groups.map((group) => {
+      const groupHeader = `
+        <tr class="htql-s101-group-header">
+          <td colspan="4">Năm học ${group.namHoc} — Học kỳ ${group.hocKy}</td>
+        </tr>
+      `;
+      const dataRows = group.rows.map((row) => `
+        <tr>
+          <td>${row.stt}</td>
+          <td><span class="htql-s101-ma-hp">${row.maHP}</span></td>
+          <td style="text-align:left">${row.tenHP}</td>
+          <td><span class="htql-s101-tc">${row.soTC}</span></td>
+        </tr>
+      `).join('');
+      return groupHeader + dataRows;
+    }).join('');
+
+    const totalRow = data.total ? `
+      <tr class="htql-s101-total-row">
+        <td colspan="4">${data.total}</td>
+      </tr>
+    ` : '';
+
+    const isGraph = currentSettings.s101View !== 'table';
 
     root.innerHTML = `
       <div class="htql-sindex-shell">
@@ -2128,11 +2176,38 @@
         </div>
 
         <main class="htql-sindex-main" id="htql-sindex-main-content">
-          <div class="htql-sindex-timeline">
-            ${data.rows.length > 0
-              ? clusterHTML
-              : '<p style="text-align:center;opacity:0.6;padding:20px;">Không có dữ liệu</p>'}
+          <!-- Dạng đồ thị -->
+          <div id="htql-s101-view-graph-panel" style="${isGraph ? '' : 'display:none'}">
+            <div class="htql-sindex-timeline">
+              ${data.rows.length > 0
+                ? clusterHTML
+                : '<p style="text-align:center;opacity:0.6;padding:20px;">Không có dữ liệu</p>'}
+            </div>
           </div>
+
+          <!-- Dạng bảng -->
+          <div id="htql-s101-view-table-panel" style="${isGraph ? 'display:none' : ''}">
+            <div class="htql-sindex-card htql-sindex-table-card">
+              <div class="htql-sindex-table-wrapper">
+                <table class="htql-sindex-table htql-s101-table">
+                  <thead>
+                    <tr>
+                      <th style="width:5%">STT</th>
+                      <th style="width:10%">Mã HP</th>
+                      <th style="text-align:left">Tên học phần</th>
+                      <th style="width:8%">Số TC</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${data.rows.length > 0
+                      ? tableBodyRows + totalRow
+                      : '<tr><td colspan="4" style="text-align:center;padding:20px;opacity:0.6;">Không có dữ liệu</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div class="htql-s101-actions">
             <button type="button" id="htql-s101-print" class="htql-s301-btn htql-s101-print-btn">
               ${svgIcon('print')}
@@ -2144,8 +2219,10 @@
     `;
 
     window.HTQL_Shared.setupHeaderActions(root, '../../hindex.php', '../../../../logout.php');
-    requestAnimationFrame(() => requestAnimationFrame(() => layoutAllClusters(root)));
-    setupS101Actions(root);
+    if (isGraph) {
+      requestAnimationFrame(() => requestAnimationFrame(() => layoutAllClusters(root)));
+    }
+    setupS101Actions(root, data);
     return root;
   }
 
@@ -2297,6 +2374,15 @@
         tr?.querySelectorAll('.htql-s3011-nam, .htql-s3011-hk').forEach((sel) => {
           sel.disabled = !chk.checked;
         });
+
+        // Sau khi enable form gốc, sync ngay giá trị hiện tại từ UI dropdown
+        // vì batTat(true) chỉ enable nhưng không set value
+        if (chk.checked) {
+          const namSel = tr?.querySelector('.htql-s3011-nam');
+          const hkSel  = tr?.querySelector('.htql-s3011-hk');
+          if (namSel && row.namSel) row.namSel.value = namSel.value;
+          if (hkSel  && row.hkSel)  row.hkSel.value  = hkSel.value;
+        }
       });
     });
 
@@ -2372,6 +2458,11 @@
       tr?.querySelectorAll('.htql-s3011-nam, .htql-s3011-hk').forEach((sel) => {
         sel.disabled = false;
       });
+      // Sync giá trị hiện tại vào form gốc cho các row pre-checked
+      const namSel = tr?.querySelector('.htql-s3011-nam');
+      const hkSel  = tr?.querySelector('.htql-s3011-hk');
+      if (namSel && row.namSel) row.namSel.value = namSel.value;
+      if (hkSel  && row.hkSel)  row.hkSel.value  = hkSel.value;
     });
 
     syncSaveDisabled();
@@ -2558,6 +2649,703 @@
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
 
+  // ─── S3012 THÊM HP NGOÀI CTDT ────────────────────────────────────────────
+
+  function extractS3012Data() {
+    const data = {
+      title: 'Thêm Học Phần Vào Danh Sách Học Phần Phải Học Thêm',
+      advisor: extractAdvisorData(),
+      notices: extractNotices(),
+      menuItems: extractMenuItems(),
+      namHocOptions: [],
+      hocKyOptions: [],
+      formAction: 'sindex.php?mID=S30121',
+    };
+
+    const form = document.forms.frmThemMH;
+    if (form) {
+      const namSel = form.cboNamHoc;
+      const hkSel = form.cboHocKy;
+      if (namSel) {
+        Array.from(namSel.options).forEach((opt) => {
+          data.namHocOptions.push({ value: opt.value, label: normalize(opt.textContent), selected: opt.selected });
+        });
+      }
+      if (hkSel) {
+        Array.from(hkSel.options).forEach((opt) => {
+          data.hocKyOptions.push({ value: opt.value, label: normalize(opt.textContent), selected: opt.selected });
+        });
+      }
+      const actionMatch = (form.btnLuu && form.btnLuu.getAttribute('onclick') || '').match(/thucthi\('([^']+)'\)/);
+      if (actionMatch) data.formAction = actionMatch[1];
+    }
+
+    const titleEl = document.querySelector('td.main_1');
+    if (titleEl) data.title = normalize(titleEl.textContent) || data.title;
+
+    return data;
+  }
+
+  function preserveS3012Forms() {
+    const forms = {};
+    if (document.forms.frmThemMH) forms.frmThemMH = document.forms.frmThemMH;
+    return forms;
+  }
+
+  function buildFormShell(data, forms, pageId, returnMID) {
+    const root = document.createElement('div');
+    root.id = ROOT_ID;
+
+    const namOptions = data.namHocOptions.map((opt) =>
+      `<option value="${opt.value}"${opt.selected ? ' selected' : ''}>${opt.label}</option>`
+    ).join('');
+    const hkOptions = data.hocKyOptions.map((opt) =>
+      `<option value="${opt.value}"${opt.selected ? ' selected' : ''}>${opt.label}</option>`
+    ).join('');
+
+    root.innerHTML = `
+      <div class="htql-sindex-shell">
+        ${window.HTQL_Shared.buildHeaderHTML('htql-sindex-card', 'Kế hoạch học tập')}
+        ${buildNavHTML(data.menuItems, 'S301')}
+        <div class="htql-sindex-top-row">
+          ${buildAdvisorHTML(data.advisor)}
+          ${buildNoticesHTML(data.notices)}
+          <div></div>
+        </div>
+        <main class="htql-sindex-main" id="htql-sindex-main-content">
+          <div class="htql-sindex-card htql-sindex-table-card" style="border-radius:20px;overflow:hidden;">
+            <div class="htql-s301-table-title" style="padding:22px 24px 8px;">${data.title}</div>
+            <div style="padding:24px 32px 28px;">
+              <div id="htql-form-msg" style="display:none;padding:10px 16px;border-radius:10px;margin-bottom:16px;font-size:0.88rem;font-weight:600;"></div>
+              <div style="display:grid;grid-template-columns:140px 1fr;gap:14px 18px;align-items:center;max-width:520px;margin:0 auto;">
+                <label style="font-size:0.88rem;font-weight:700;color:var(--htql-sindex-ink);text-align:right;">Mã học phần</label>
+                <input type="text" id="htql-form-mamh" class="htql-s3011-search-input" style="width:100%;text-transform:uppercase;" maxlength="20" aria-label="Mã học phần">
+
+                <label style="font-size:0.88rem;font-weight:700;color:var(--htql-sindex-ink);text-align:right;">Tên học phần</label>
+                <span id="htql-form-tenmh" style="font-size:0.9rem;font-weight:600;color:var(--htql-sindex-blue);min-height:22px;"></span>
+
+                <label style="font-size:0.88rem;font-weight:700;color:var(--htql-sindex-ink);text-align:right;">Năm học</label>
+                <select id="htql-form-namhoc" class="htql-s301-select" aria-label="Năm học">
+                  ${namOptions}
+                </select>
+
+                <label style="font-size:0.88rem;font-weight:700;color:var(--htql-sindex-ink);text-align:right;">Học kỳ</label>
+                <select id="htql-form-hocky" class="htql-s301-select" style="min-width:90px;" aria-label="Học kỳ">
+                  ${hkOptions}
+                </select>
+
+                <div></div>
+                <div style="display:flex;gap:10px;padding-top:8px;">
+                  <button type="button" id="htql-form-save" class="htql-s301-btn htql-s301-btn-primary">Lưu</button>
+                  <button type="button" id="htql-form-back" class="htql-s301-btn htql-s301-btn-outline">Kết thúc</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    `;
+
+    window.HTQL_Shared.setupHeaderActions(root, '../../hindex.php', '../../../../logout.php');
+    appendHiddenForms(root, forms);
+    setupFormShellActions(root, forms, data, pageId, returnMID);
+    return root;
+  }
+
+  function setupFormShellActions(root, forms, data, pageId, returnMID) {
+    const form = forms.frmThemMH;
+    const maInput = root.querySelector('#htql-form-mamh');
+    const tenEl = root.querySelector('#htql-form-tenmh');
+    const namSel = root.querySelector('#htql-form-namhoc');
+    const hkSel = root.querySelector('#htql-form-hocky');
+    const msgEl = root.querySelector('#htql-form-msg');
+
+    function showMsg(text, isError) {
+      if (!msgEl) return;
+      msgEl.textContent = text;
+      msgEl.style.background = isError ? 'rgba(224,82,82,0.1)' : 'rgba(20,120,60,0.1)';
+      msgEl.style.color = isError ? '#c0392b' : '#1a5c30';
+      msgEl.style.border = isError ? '1px solid rgba(224,82,82,0.3)' : '1px solid rgba(20,120,60,0.3)';
+      msgEl.style.display = 'block';
+    }
+
+    function lookupTenMonHoc(mamon) {
+      if (!mamon || mamon.length < 4) { if (tenEl) tenEl.textContent = ''; return; }
+      if (form && form.txtMaMonHoc) {
+        form.txtMaMonHoc.value = mamon;
+        if (typeof window.getTenmonhoc === 'function') {
+          window.getTenmonhoc(mamon);
+          setTimeout(() => {
+            const orig = form.querySelector('#tenmon') || document.getElementById('tenmon');
+            if (tenEl && orig) tenEl.textContent = orig.textContent;
+          }, 600);
+        }
+      }
+    }
+
+    maInput?.addEventListener('input', () => lookupTenMonHoc(maInput.value));
+    maInput?.addEventListener('change', () => lookupTenMonHoc(maInput.value));
+
+    namSel?.addEventListener('change', () => {
+      if (form && form.cboNamHoc) form.cboNamHoc.value = namSel.value;
+      if (hkSel) hkSel.value = '';
+    });
+
+    hkSel?.addEventListener('change', () => {
+      if (form && form.cboHocKy) form.cboHocKy.value = hkSel.value;
+    });
+
+    root.querySelector('#htql-form-save')?.addEventListener('click', () => {
+      const maMH = maInput?.value?.trim()?.toUpperCase() || '';
+      const namHoc = namSel?.value || '';
+      const hocKy = hkSel?.value || '';
+
+      if (!maMH) { showMsg('Bạn chưa nhập mã học phần!', true); maInput?.focus(); return; }
+      const validChars = /^[A-Za-z0-9]+$/;
+      if (!validChars.test(maMH)) { showMsg('Mã học phần chỉ chứa ký tự và số!', true); maInput?.focus(); return; }
+      if (!namHoc) { showMsg('Bạn chưa chọn năm học!', true); namSel?.focus(); return; }
+      if (!hocKy) { showMsg('Bạn chưa chọn học kỳ!', true); hkSel?.focus(); return; }
+
+      if (form) {
+        form.txtMaMonHoc.value = maMH;
+        form.cboNamHoc.value = namHoc;
+        form.cboHocKy.value = hocKy;
+        form.action = data.formAction;
+        submitFormSafe(form);
+      }
+    });
+
+    root.querySelector('#htql-form-back')?.addEventListener('click', () => {
+      if (form) {
+        form.action = `sindex.php?mID=${returnMID}`;
+        submitFormSafe(form);
+      } else {
+        location.href = `sindex.php?mID=${returnMID}`;
+      }
+    });
+  }
+
+  // ─── S401 CẬP NHẬT NĂM HỌC - HỌC KỲ ────────────────────────────────────
+
+  function extractS401Data() {
+    const data = {
+      title: 'Cập Nhật Năm Học - Học Kỳ Các Học Phần Phải Học Thêm',
+      advisor: extractAdvisorData(),
+      notices: extractNotices(),
+      menuItems: extractMenuItems(),
+      filterNamHocOptions: [],
+      filterHocKyOptions: [],
+      rows: [],
+      summary: { count: '', credits: '' },
+    };
+
+    const form = document.forms.frmDSMonHocPhaiHocThem;
+    if (!form) return data;
+
+    // Filter selects
+    const locNamSel = form.cboNamHocLoc;
+    const locHkSel  = form.cboHocKyLoc;
+    if (locNamSel) {
+      Array.from(locNamSel.options).forEach((opt) => {
+        data.filterNamHocOptions.push({ value: opt.value, label: normalize(opt.textContent), selected: opt.selected });
+      });
+    }
+    if (locHkSel) {
+      Array.from(locHkSel.options).forEach((opt) => {
+        data.filterHocKyOptions.push({ value: opt.value, label: normalize(opt.textContent), selected: opt.selected });
+      });
+    }
+
+    // Extract row data from the table (8 columns)
+    const chkChons      = form.querySelectorAll('input[name="chkChon"]');
+    const cboNamHocs    = form.querySelectorAll('select[name="cboNamHoc"]');
+    const cboHocKys     = form.querySelectorAll('select[name="cboHocKy"]');
+    const hdDVHTs       = form.querySelectorAll('input[name="hdDVHT"]');
+
+    // Also collect CaiThien controls if present
+    const chkCaiThiens       = form.querySelectorAll('input[name="chkChonCaiThien"]');
+    const cboNamHocCaiThiens  = form.querySelectorAll('select[name="cboNamHocCaiThien"]');
+    const cboHocKyCaiThiens   = form.querySelectorAll('select[name="cboHocKyCaiThien"]');
+    const hdDVHTCaiThiens     = form.querySelectorAll('input[name="hdDVHTCaiThien"]');
+
+    // Parse main rows from table rows (8 td cells)
+    let rowIdx = 0;
+    form.querySelectorAll('tr').forEach((tr) => {
+      const cells = Array.from(tr.querySelectorAll('td'));
+      if (cells.length !== 8) return;
+      const sttText = normalize(cells[0].textContent);
+      if (!/^\d+$/.test(sttText)) return;
+
+      const maHP  = normalize(cells[1].textContent);
+      const tenHP = normalize(cells[2].textContent);
+      const soTC  = normalize(cells[3].textContent).replace(/\s+/g, ' ').split(' ')[0];
+      const caiThien = normalize(cells[6].textContent);
+
+      // Extract nam/hk select options from cell 4 & 5
+      const namSel = cells[4].querySelector('select[name="cboNamHoc"]');
+      const hkSel  = cells[5].querySelector('select[name="cboHocKy"]');
+      const dvhtInput = cells[3].querySelector('input[name="hdDVHT"]');
+      const chkEl = cells[7].querySelector('input[name="chkChon"]');
+
+      const namOptions = namSel ? Array.from(namSel.options).map((o) => ({
+        value: o.value, label: normalize(o.textContent), selected: o.selected,
+      })) : [];
+      const hkOptions = hkSel ? Array.from(hkSel.options).map((o) => ({
+        value: o.value, label: normalize(o.textContent), selected: o.selected,
+      })) : [];
+
+      // Detect currently saved value from mangNamHoc/mangHocKy via the selected option
+      const savedNam = namSel ? (Array.from(namSel.options).find((o) => o.defaultSelected || o.selected)?.value || '') : '';
+      const savedHk  = hkSel  ? (Array.from(hkSel.options).find((o) => o.defaultSelected || o.selected)?.value || '') : '';
+
+      data.rows.push({
+        type: 'main',
+        idx: rowIdx,
+        stt: sttText,
+        maHP, tenHP, soTC, caiThien,
+        namOptions, hkOptions,
+        savedNam, savedHk,
+        dvht: dvhtInput ? dvhtInput.value : '0',
+        chkEl, namSel, hkSel,
+      });
+      rowIdx++;
+    });
+
+    // Parse cải thiện rows if present (also 8 td cells but uses chkChonCaiThien)
+    let ctIdx = 0;
+    form.querySelectorAll('tr').forEach((tr) => {
+      const cells = Array.from(tr.querySelectorAll('td'));
+      if (cells.length !== 8) return;
+      const chkCT = cells[7].querySelector('input[name="chkChonCaiThien"]');
+      if (!chkCT) return;
+
+      const sttText = normalize(cells[0].textContent);
+      const maHP  = normalize(cells[1].textContent);
+      const tenHP = normalize(cells[2].textContent);
+      const soTC  = normalize(cells[3].textContent).replace(/\s+/g, ' ').split(' ')[0];
+      const namSel = cells[4].querySelector('select[name="cboNamHocCaiThien"]');
+      const hkSel  = cells[5].querySelector('select[name="cboHocKyCaiThien"]');
+      const dvhtInput = cells[3].querySelector('input[name="hdDVHTCaiThien"]');
+
+      const namOptions = namSel ? Array.from(namSel.options).map((o) => ({
+        value: o.value, label: normalize(o.textContent), selected: o.selected,
+      })) : [];
+      const hkOptions = hkSel ? Array.from(hkSel.options).map((o) => ({
+        value: o.value, label: normalize(o.textContent), selected: o.selected,
+      })) : [];
+
+      data.rows.push({
+        type: 'caithien',
+        idx: ctIdx,
+        stt: sttText,
+        maHP, tenHP, soTC,
+        caiThien: '✓',
+        namOptions, hkOptions,
+        dvht: dvhtInput ? dvhtInput.value : '0',
+        chkEl: chkCT, namSel, hkSel,
+      });
+      ctIdx++;
+    });
+
+    const titleEl = document.querySelector('td.main_1');
+    if (titleEl) data.title = normalize(titleEl.textContent) || data.title;
+
+    return data;
+  }
+
+  function preserveS401Forms() {
+    const forms = {};
+    ['frmDSMonHocPhaiHocThem', 'frmXuLy', 'frmDuLieuLoc'].forEach((name) => {
+      if (document.forms[name]) forms[name] = document.forms[name];
+    });
+    return forms;
+  }
+
+  function buildS401Shell(data, forms) {
+    const root = document.createElement('div');
+    root.id = ROOT_ID;
+
+    const filterNamOpts = data.filterNamHocOptions.map((opt) =>
+      `<option value="${opt.value}"${opt.selected ? ' selected' : ''}>${opt.label}</option>`
+    ).join('');
+    const filterHkOpts = data.filterHocKyOptions.map((opt) =>
+      `<option value="${opt.value}"${opt.selected ? ' selected' : ''}>${opt.label}</option>`
+    ).join('');
+
+    const tableRows = data.rows.map((row) => {
+      const namOpts = row.namOptions.map((o) =>
+        `<option value="${o.value}"${o.selected ? ' selected' : ''}>${o.label}</option>`
+      ).join('');
+
+      const hkOptsReal = (row.hkOptions || []).map((o) =>
+        `<option value="${o.value}"${o.selected ? ' selected' : ''}>${o.label}</option>`
+      ).join('');
+
+      const isCT = row.type === 'caithien';
+      const chkName  = isCT ? 'htql-s401-chk-ct' : 'htql-s401-chk';
+      const namSelId = `htql-s401-nam-${isCT ? 'ct' : 'main'}-${row.idx}`;
+      const hkSelId  = `htql-s401-hk-${isCT ? 'ct' : 'main'}-${row.idx}`;
+
+      return `
+        <tr data-s401-type="${row.type}" data-s401-idx="${row.idx}">
+          <td>${row.stt}</td>
+          <td><span class="htql-s301-ma-hp">${row.maHP}</span></td>
+          <td class="htql-s301-ten-hp">${row.tenHP}</td>
+          <td class="htql-s301-tc">${row.soTC}</td>
+          <td>
+            <select id="${namSelId}" class="htql-s301-select htql-s401-nam-sel" data-type="${row.type}" data-idx="${row.idx}" disabled aria-label="Năm học ${row.maHP}" style="min-width:100px;">
+              ${namOpts}
+            </select>
+          </td>
+          <td>
+            <select id="${hkSelId}" class="htql-s301-select htql-s401-hk-sel" data-type="${row.type}" data-idx="${row.idx}" disabled aria-label="Học kỳ ${row.maHP}" style="min-width:70px;">
+              ${hkOptsReal}
+            </select>
+          </td>
+          <td style="text-align:center;">${row.caiThien && row.caiThien !== '&nbsp;' && row.caiThien !== '' && row.caiThien !== '—' ? `<span style="color:var(--htql-sindex-blue);font-weight:700;">${row.caiThien}</span>` : '—'}</td>
+          <td style="text-align:center;">
+            <input type="checkbox" class="htql-s3011-check htql-s401-chk-input"
+              data-type="${row.type}" data-idx="${row.idx}" data-mamh="${row.maHP}"
+              aria-label="Cập nhật ${row.maHP}">
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    root.innerHTML = `
+      <div class="htql-sindex-shell">
+        ${window.HTQL_Shared.buildHeaderHTML('htql-sindex-card', 'Kế hoạch học tập')}
+        ${buildNavHTML(data.menuItems, 'S401')}
+        <div class="htql-sindex-top-row">
+          ${buildAdvisorHTML(data.advisor)}
+          ${buildNoticesHTML(data.notices)}
+          <div></div>
+        </div>
+        <main class="htql-sindex-main" id="htql-sindex-main-content">
+          <div class="htql-sindex-card htql-sindex-table-card" style="border-radius:20px;overflow:hidden;">
+            <div class="htql-s301-table-title" style="padding:22px 24px 8px;">${data.title}</div>
+            <div class="htql-s301-toolbar">
+              <span class="htql-s301-toolbar-label">Năm học</span>
+              <select id="htql-s401-loc-namhoc" class="htql-s301-select" aria-label="Lọc năm học">${filterNamOpts}</select>
+              <span class="htql-s301-toolbar-label">Học kỳ</span>
+              <select id="htql-s401-loc-hocky" class="htql-s301-select" style="min-width:72px;" aria-label="Lọc học kỳ">${filterHkOpts}</select>
+              <button type="button" id="htql-s401-lietke" class="htql-s301-btn htql-s301-btn-primary">Liệt kê</button>
+            </div>
+            <div class="htql-sindex-table-wrapper" style="border:none;border-radius:0;border-top:1px solid var(--htql-sindex-border);">
+              <table class="htql-sindex-table htql-s301-table">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Mã HP</th>
+                    <th>Tên học phần</th>
+                    <th>Số TC</th>
+                    <th>Năm học</th>
+                    <th>Học kỳ</th>
+                    <th>Cải thiện</th>
+                    <th>Cập nhật</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRows || '<tr><td colspan="8" style="text-align:center;padding:24px;opacity:0.6;">Không có học phần</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+            <div style="display:flex;justify-content:center;padding:16px 20px;border-top:1px solid var(--htql-sindex-border);gap:10px;">
+              <button type="button" id="htql-s401-save" class="htql-s301-btn htql-s301-btn-primary htql-s3011-btn-save" disabled>Lưu</button>
+            </div>
+          </div>
+        </main>
+      </div>
+    `;
+
+    window.HTQL_Shared.setupHeaderActions(root, '../../hindex.php', '../../../../logout.php');
+    appendHiddenForms(root, forms);
+    setupS401Actions(root, forms, data);
+    return root;
+  }
+
+  function setupS401Actions(root, forms, data) {
+    const mainForm = forms.frmDSMonHocPhaiHocThem;
+    const xulyForm = forms.frmXuLy;
+    const locForm  = forms.frmDuLieuLoc;
+    const saveBtn  = root.querySelector('#htql-s401-save');
+
+    // Liệt kê filter
+    root.querySelector('#htql-s401-lietke')?.addEventListener('click', () => {
+      const locNam = root.querySelector('#htql-s401-loc-namhoc')?.value || '';
+      const locHk  = root.querySelector('#htql-s401-loc-hocky')?.value || '';
+      if (mainForm) {
+        if (mainForm.cboNamHocLoc) mainForm.cboNamHocLoc.value = locNam;
+        if (mainForm.cboHocKyLoc) mainForm.cboHocKyLoc.value = locHk;
+      }
+      if (locForm) {
+        if (locForm.hdNamHocLoc) locForm.hdNamHocLoc.value = locNam;
+        if (locForm.hdHocKyLoc)  locForm.hdHocKyLoc.value  = locHk;
+        submitFormSafe(locForm);
+      }
+    });
+
+    // Checkbox toggle → enable/disable selects + update saveBtn state
+    root.querySelectorAll('.htql-s401-chk-input').forEach((chk) => {
+      chk.addEventListener('change', () => {
+        const type = chk.dataset.type;
+        const idx  = chk.dataset.idx;
+        const tr   = chk.closest('tr');
+        const namSel = tr?.querySelector('.htql-s401-nam-sel');
+        const hkSel  = tr?.querySelector('.htql-s401-hk-sel');
+
+        if (namSel) namSel.disabled = !chk.checked;
+        if (hkSel)  hkSel.disabled  = !chk.checked;
+
+        // Sync back to original form element
+        const row = data.rows.find((r) => r.type === type && String(r.idx) === String(idx));
+        if (row) {
+          if (row.chkEl) row.chkEl.checked = chk.checked;
+          if (typeof window.tatMoNamHocHocKy === 'function' && type === 'main') {
+            window.tatMoNamHocHocKy(chk.checked, parseInt(idx, 10));
+          }
+          if (typeof window.tatMoNamHocHocKyCaiThien === 'function' && type === 'caithien') {
+            window.tatMoNamHocHocKyCaiThien(chk.checked, parseInt(idx, 10));
+          }
+        }
+
+        // Enable save if any checkbox checked
+        const anyChecked = Array.from(root.querySelectorAll('.htql-s401-chk-input')).some((c) => c.checked);
+        if (saveBtn) saveBtn.disabled = !anyChecked;
+      });
+    });
+
+    // Nam sel change → sync back to original form
+    root.querySelectorAll('.htql-s401-nam-sel').forEach((sel) => {
+      sel.addEventListener('change', () => {
+        const type = sel.dataset.type;
+        const idx  = parseInt(sel.dataset.idx, 10);
+        const row  = data.rows.find((r) => r.type === type && r.idx === idx);
+        if (row && row.namSel) row.namSel.value = sel.value;
+        // Reset hk on the row
+        const tr   = sel.closest('tr');
+        const hkSel = tr?.querySelector('.htql-s401-hk-sel');
+        if (hkSel) {
+          hkSel.selectedIndex = 0;
+          if (row && row.hkSel) row.hkSel.selectedIndex = 0;
+        }
+      });
+    });
+
+    // Hk sel change → sync back
+    root.querySelectorAll('.htql-s401-hk-sel').forEach((sel) => {
+      sel.addEventListener('change', () => {
+        const type = sel.dataset.type;
+        const idx  = parseInt(sel.dataset.idx, 10);
+        const row  = data.rows.find((r) => r.type === type && r.idx === idx);
+        if (row && row.hkSel) row.hkSel.value = sel.value;
+      });
+    });
+
+    // Save → call original thucHienLuu
+    saveBtn?.addEventListener('click', () => {
+      if (typeof window.thucHienLuu === 'function') {
+        window.thucHienLuu();
+      }
+    });
+  }
+
+  // ─── S601 XEM THÔNG TIN HỌP LỚP ─────────────────────────────────────────
+
+  function extractS601Data() {
+    const data = {
+      title: 'Xem thông tin họp lớp',
+      advisor: extractAdvisorData(),
+      notices: extractNotices(),
+      menuItems: extractMenuItems(),
+      studentInfo: '',
+      namHocOptions: [],
+      hocKyOptions: [],
+      selectedNamHoc: '',
+      selectedHocKy: '',
+      meetings: [],    // [{slot: 1, soLuong: '24 / 45', printId: '8868'}, ...]
+    };
+
+    // Student info row
+    const infoTd = document.querySelector('td.main_3[colspan="10"]');
+    if (infoTd) data.studentInfo = normalize(infoTd.textContent);
+
+    // Filter selects (frmLietKe form)
+    const lkForm = document.forms.frmLietKe;
+    const namSel = lkForm ? lkForm.cboNamHocLoc : document.getElementById('cboNamHocLoc');
+    const hkSel = lkForm ? lkForm.cboHocKyLoc : document.getElementById('cboHocKyLoc');
+
+    if (namSel) {
+      Array.from(namSel.options).forEach((opt) => {
+        data.namHocOptions.push({ value: opt.value, label: normalize(opt.textContent), selected: opt.selected });
+      });
+      data.selectedNamHoc = namSel.value;
+    }
+    if (hkSel) {
+      Array.from(hkSel.options).forEach((opt) => {
+        data.hocKyOptions.push({ value: opt.value, label: normalize(opt.textContent), selected: opt.selected });
+      });
+      data.selectedHocKy = hkSel.value;
+    }
+
+    // Meeting data rows — find the data row(s) with meeting counts
+    // The table structure has header rows (Lần họp 1..5), then data rows
+    document.querySelectorAll('table.border_1 tr').forEach((tr) => {
+      const cells = Array.from(tr.querySelectorAll('td'));
+      if (cells.length !== 10) return;
+      // Each pair of cells = (soLuong, thaoTac) for each meeting slot
+      // Skip pure header rows (all cells have class main_3 or are empty)
+      const hasData = cells.some((td) => {
+        const text = normalize(td.textContent);
+        return text && text !== '' && !td.classList.contains('main_3');
+      });
+      if (!hasData) return;
+      if (cells.every((td) => td.classList.contains('main_3'))) return;
+
+      // Check if it's a real data row vs empty filler
+      const isFillerRow = cells.every((td) => !normalize(td.textContent));
+      if (isFillerRow) return;
+
+      const row = { slots: [] };
+      for (let i = 0; i < 5; i++) {
+        const soLuongCell = cells[i * 2];
+        const thaoTacCell = cells[i * 2 + 1];
+        const soLuong = normalize(soLuongCell ? soLuongCell.textContent : '');
+        let printId = '';
+        if (thaoTacCell) {
+          const printLink = thaoTacCell.querySelector('a[onclick*="printForm"]');
+          if (printLink) {
+            const m = (printLink.getAttribute('onclick') || '').match(/printForm\("?(\d+)"?\)/);
+            if (m) printId = m[1];
+          }
+        }
+        row.slots.push({ soLuong, printId });
+      }
+      data.meetings.push(row);
+    });
+
+    return data;
+  }
+
+  function preserveS601Forms() {
+    const forms = {};
+    ['frmLietKe', 'frmChuyenTrang', 'frmThem', 'frmThaoTac'].forEach((name) => {
+      if (document.forms[name]) forms[name] = document.forms[name];
+    });
+    return forms;
+  }
+
+  function buildS601Shell(data, forms) {
+    const root = document.createElement('div');
+    root.id = ROOT_ID;
+
+    const namOptions = data.namHocOptions.map((opt) =>
+      `<option value="${opt.value}"${opt.selected ? ' selected' : ''}>${opt.label}</option>`
+    ).join('');
+    const hkOptions = data.hocKyOptions.map((opt) =>
+      `<option value="${opt.value}"${opt.selected ? ' selected' : ''}>${opt.label}</option>`
+    ).join('');
+
+    const slotLabels = ['Lần họp 1', 'Lần họp 2', 'Lần họp 3', 'Lần họp 4', 'Lần họp 5'];
+
+    const meetingRows = data.meetings.map((row) => {
+      const cells = row.slots.map((slot, i) => {
+        const soLuong = slot.soLuong || '—';
+        let printBtn = '';
+        if (slot.printId) {
+          printBtn = `
+            <button type="button" class="htql-s601-print-btn" data-print-id="${slot.printId}" title="In biên bản lần họp ${i + 1}" aria-label="In lần họp ${i + 1}">
+              ${svgIcon('print')}
+            </button>
+          `;
+        }
+        return `
+          <td style="text-align:center;font-weight:${slot.soLuong ? '700' : '400'};color:${slot.soLuong ? 'var(--htql-sindex-blue)' : 'var(--htql-sindex-muted)'};">${soLuong}</td>
+          <td style="text-align:center;">${printBtn}</td>
+        `;
+      }).join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+
+    const slotHeaders = slotLabels.map((label, i) => `
+      <th colspan="2" style="white-space:nowrap;">${label}${i === 4 ? ' <span style="font-size:0.7rem;font-weight:500;opacity:0.7;">(ghi thêm)</span>' : ''}</th>
+    `).join('');
+
+    root.innerHTML = `
+      <div class="htql-sindex-shell">
+        ${window.HTQL_Shared.buildHeaderHTML('htql-sindex-card', 'Kế hoạch học tập')}
+        ${buildNavHTML(data.menuItems, 'S601')}
+        <div class="htql-sindex-top-row">
+          ${buildAdvisorHTML(data.advisor)}
+          ${buildNoticesHTML(data.notices)}
+          <div></div>
+        </div>
+        <main class="htql-sindex-main" id="htql-sindex-main-content">
+          <div class="htql-sindex-card htql-sindex-table-card" style="border-radius:20px;overflow:hidden;">
+            <div class="htql-s301-table-title" style="padding:22px 24px 8px;">${data.title}</div>
+            ${data.studentInfo ? `<div style="padding:6px 24px 0;text-align:center;font-size:0.88rem;font-weight:600;color:var(--htql-sindex-ink);">${data.studentInfo}</div>` : ''}
+            <div class="htql-s301-toolbar" style="justify-content:center;gap:16px;">
+              <span class="htql-s301-toolbar-label">Năm học</span>
+              <select id="htql-s601-namhoc" class="htql-s301-select" aria-label="Năm học">${namOptions}</select>
+              <span class="htql-s301-toolbar-label">Học kỳ</span>
+              <select id="htql-s601-hocky" class="htql-s301-select" style="min-width:90px;" aria-label="Học kỳ">${hkOptions}</select>
+              <button type="button" id="htql-s601-filter" class="htql-s301-btn htql-s301-btn-primary">Liệt kê</button>
+            </div>
+            <div class="htql-sindex-table-wrapper" style="border:none;border-radius:0;border-top:1px solid var(--htql-sindex-border);">
+              <table class="htql-sindex-table" style="min-width:700px;">
+                <thead>
+                  <tr>${slotHeaders}</tr>
+                  <tr>
+                    ${Array.from({length: 5}).map(() => `
+                      <th>Số lượng tham dự</th>
+                      <th>Thao tác</th>
+                    `).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${meetingRows || `<tr><td colspan="10" style="text-align:center;padding:24px;opacity:0.6;">Không có dữ liệu họp lớp</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </main>
+      </div>
+    `;
+
+    window.HTQL_Shared.setupHeaderActions(root, '../../hindex.php', '../../../../logout.php');
+    appendHiddenForms(root, forms);
+    setupS601Actions(root, forms, data);
+    return root;
+  }
+
+  function setupS601Actions(root, forms, data) {
+    const lkForm = forms.frmLietKe;
+    const namSel = root.querySelector('#htql-s601-namhoc');
+    const hkSel = root.querySelector('#htql-s601-hocky');
+
+    root.querySelector('#htql-s601-filter')?.addEventListener('click', () => {
+      if (!lkForm) {
+        // Fallback: navigate with query params
+        location.href = `sindex.php?mID=S601`;
+        return;
+      }
+      if (lkForm.cboNamHocLoc) lkForm.cboNamHocLoc.value = namSel?.value || '';
+      if (lkForm.cboHocKyLoc) lkForm.cboHocKyLoc.value = hkSel?.value || '';
+      submitFormSafe(lkForm);
+    });
+
+    root.querySelectorAll('.htql-s601-print-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.printId;
+        if (id && typeof window.printForm === 'function') {
+          window.printForm(id);
+        }
+      });
+    });
+  }
+
+  // ─── RENDER ───────────────────────────────────────────────────────────────
+
   function render(settings) {
     disableOriginalCSS();
     injectStyle(getCSS(settings));
@@ -2578,6 +3366,31 @@
       const forms = preserveS3011Forms();
       const data = extractS3011Data();
       root = buildS3011Shell(data, forms);
+    } else if (IS_S3012) {
+      const forms = preserveS3012Forms();
+      const data = extractS3012Data();
+      root = buildFormShell(data, forms, 'S3012', 'S301');
+    } else if (IS_S3013) {
+      const forms = preserveS3012Forms();
+      const data = extractS3012Data();
+      // Override title for S3013
+      data.title = 'Thêm Học Phần Học Cải Thiện Điểm';
+      const actionEl = document.querySelector('input[onclick*="S30131"]');
+      if (actionEl) {
+        const m = (actionEl.getAttribute('onclick') || '').match(/thucthi\('([^']+)'\)/);
+        if (m) data.formAction = m[1];
+      } else {
+        data.formAction = 'sindex.php?mID=S30131';
+      }
+      root = buildFormShell(data, forms, 'S3013', 'S301');
+    } else if (IS_S401) {
+      const forms = preserveS401Forms();
+      const data = extractS401Data();
+      root = buildS401Shell(data, forms);
+    } else if (IS_S601) {
+      const forms = preserveS601Forms();
+      const data = extractS601Data();
+      root = buildS601Shell(data, forms);
     } else {
       const data = extractStudyPlanData();
       root = buildSindexShell(data);

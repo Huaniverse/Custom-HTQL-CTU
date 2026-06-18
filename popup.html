@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HTQL Theme Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&family=Sora:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* ===== RESET & BASE ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,7 +29,7 @@
     html { font-size: 13px; }
 
     body {
-      width: 360px;
+      width: 480px;
       background: var(--bg);
       color: var(--text);
       font-family: 'Inter', system-ui, sans-serif;
@@ -490,7 +490,7 @@
     /* Preset thumbnails */
     .preset-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       margin-top: 10px;
     }
@@ -570,7 +570,7 @@
 
     .solid-preset-grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(8, 1fr);
       gap: 8px;
       margin-top: 4px;
     }
@@ -882,9 +882,8 @@
     }
 
     /* ===== SCROLLBAR ===== */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 99px; }
+    ::-webkit-scrollbar { display: none; }
+    * { scrollbar-width: none; }
 
     /* ===== GLASS REDESIGN OVERRIDES ===== */
     :root {
@@ -908,9 +907,9 @@
     }
 
     body {
-      width: 388px;
+      width: 480px;
       min-height: 100vh;
-      padding: 12px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -1052,7 +1051,7 @@
     }
 
     .preview-box {
-      height: 174px;
+      height: 200px;
       border-radius: var(--popup-radius-lg);
       border: 1px solid rgba(255,255,255,0.14);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 30px rgba(2, 8, 23, 0.25);
@@ -1416,6 +1415,18 @@
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    .s101-view-btn.active {
+      background: rgba(125, 211, 252, 0.18) !important;
+      border-color: rgba(125, 211, 252, 0.35) !important;
+      color: #c7f2ff !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .s101-view-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.07) !important;
+      color: var(--popup-text) !important;
+      border-color: var(--popup-border-strong) !important;
+    }
   </style>
 </head>
 <body>
@@ -1463,6 +1474,10 @@
     <button class="tab-btn" data-tab="font" id="tab-font">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
       Font
+    </button>
+    <button class="tab-btn" data-tab="layout" id="tab-layout">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Bố cục
     </button>
     <button class="tab-btn" data-tab="effects" id="tab-effects">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2Z"/><path d="M19 14l.9 3.1L23 18l-3.1.9L19 22l-.9-3.1L15 18l3.1-.9L19 14Z"/></svg>
@@ -1541,7 +1556,7 @@
 
     <!-- COLORS PANEL -->
     <div class="panel" id="panel-colors">
-      <div class="color-grid" style="grid-template-columns: 1fr;">
+      <div class="color-grid" style="grid-template-columns: 1fr 1fr;">
         <!-- Theme Color -->
         <div class="color-item">
           <div class="color-item-label">Màu chủ đề</div>
@@ -1580,7 +1595,9 @@
             <div class="preset-color-dot" style="background:#ffffff" data-color="#ffffff" title="White"></div>
           </div>
         </div>
-        <!-- Heading Color -->
+      </div>
+      <!-- Heading Color — full width -->
+      <div class="color-grid" style="grid-template-columns: 1fr;">
         <div class="color-item">
           <div class="color-item-label">Màu nhãn trường thông tin</div>
           <div class="color-swatch-row">
@@ -1609,7 +1626,7 @@
     <div class="panel" id="panel-font">
       <div>
         <div class="section-title">Chọn font chữ</div>
-        <div class="font-select-grid" id="font-select-grid">
+        <div class="font-select-grid" id="font-select-grid" style="grid-template-columns:1fr 1fr 1fr;">
           <div class="font-option" data-font="Plus Jakarta Sans" style="font-family:'Plus Jakarta Sans',sans-serif">Plus Jakarta</div>
           <div class="font-option" data-font="Inter" style="font-family:'Inter',sans-serif">Inter</div>
           <div class="font-option" data-font="Be Vietnam Pro" style="font-family:'Be Vietnam Pro',sans-serif">Be Vietnam</div>
@@ -1618,6 +1635,26 @@
           <div class="font-option" data-font="DM Sans" style="font-family:'DM Sans',sans-serif">DM Sans</div>
           <div class="font-option" data-font="Outfit" style="font-family:'Outfit',sans-serif">Outfit</div>
           <div class="font-option" data-font="Roboto" style="font-family:'Roboto',sans-serif">Roboto</div>
+          <div class="font-option" data-font="Space Grotesk" style="font-family:'Space Grotesk',sans-serif">Space Grotesk</div>
+          <div class="font-option" data-font="Sora" style="font-family:'Sora',sans-serif">Sora</div>
+          <div class="font-option" data-font="Manrope" style="font-family:'Manrope',sans-serif">Manrope</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYOUT PANEL -->
+    <div class="panel" id="panel-layout">
+      <div>
+        <div class="section-title">KHHT toàn khóa — Kiểu hiển thị</div>
+        <div style="display:flex;gap:8px;">
+          <button class="s101-view-btn" data-view="table" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border-radius:12px;border:1px solid var(--popup-border);background:rgba(255,255,255,0.04);color:var(--popup-muted);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.18s;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h18v4H3V3zm0 6h18v4H3V9zm0 6h18v4H3v-4z"/></svg>
+            Dạng bảng
+          </button>
+          <button class="s101-view-btn" data-view="graph" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;border-radius:12px;border:1px solid var(--popup-border);background:rgba(255,255,255,0.04);color:var(--popup-muted);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.18s;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="8.5" y1="17.5" x2="6" y2="15"/><line x1="15.5" y1="17.5" x2="18" y2="15"/><line x1="10" y1="11" x2="6" y2="17"/><line x1="14" y1="11" x2="18" y2="17"/></svg>
+            Dạng đồ thị
+          </button>
         </div>
       </div>
     </div>

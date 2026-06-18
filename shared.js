@@ -108,10 +108,10 @@
         font-size: 0.84rem;
         font-weight: 800;
         box-shadow: 0 6px 14px rgba(46, 70, 160, 0.08);
-        backdrop-filter: blur(${blur}px);
-        -webkit-backdrop-filter: blur(${blur}px);
         cursor: pointer;
         transition: background 0.2s ease, color 0.2s ease;
+        transform: translateZ(0);
+        isolation: isolate;
       }
       .htql-shared-home-btn:hover {
         background: ${gcH(0.8)};
@@ -127,8 +127,6 @@
         border: 1px solid ${gcH(0.35)};
         border-radius: 13px;
         background: rgba(195, 77, 63, 0.55);
-        backdrop-filter: blur(${blur}px);
-        -webkit-backdrop-filter: blur(${blur}px);
         color: #fff;
         font-family: inherit;
         font-weight: 800;
@@ -136,6 +134,8 @@
         box-shadow: 0 8px 16px rgba(169, 52, 44, 0.14);
         cursor: pointer;
         transition: background 0.2s ease, border-color 0.2s ease;
+        transform: translateZ(0);
+        isolation: isolate;
       }
       .htql-shared-logout-btn:hover {
         background: rgba(195, 77, 63, 0.72);
