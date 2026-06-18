@@ -10,6 +10,7 @@
   const DEFAULTS = {
     glassOpacity: 0.3,
     glassBlur: 20,
+    glassColor: "#ffffff",
     themeColor: "#152550",
     textColor: "#1E293B",
     fontFamily: "Plus Jakarta Sans",
@@ -25,6 +26,27 @@
 
   function isVideoUrl(url) {
     return url && (url.startsWith('data:video') || /\.(mp4|webm)(\?|$)/i.test(url));
+  }
+
+  function isSolidUrl(url) {
+    return url && url.startsWith('solid:');
+  }
+
+  function solidUrlToColor(url) {
+    return url && url.startsWith('solid:') ? url.slice(6) : '#1a1a2e';
+  }
+
+  // Chuyển hex #rrggbb → "r,g,b"
+  function hexToRgb(hex) {
+    const clean = hex.replace('#', '');
+    const full = clean.length === 3
+      ? clean.split('').map(c => c + c).join('')
+      : clean;
+    const r = parseInt(full.slice(0, 2), 16);
+    const g = parseInt(full.slice(2, 4), 16);
+    const b = parseInt(full.slice(4, 6), 16);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return '255,255,255';
+    return `${r},${g},${b}`;
   }
 
   function applyVideoBg(url) {
@@ -118,6 +140,13 @@
     const textColor = s.textColor || DEFAULTS.textColor;
     const fontFamily = s.fontFamily || DEFAULTS.fontFamily;
 
+    const isSolid = isSolidUrl(finalBgUrl);
+    const isVideo = isVideoUrl(finalBgUrl);
+    const glassColor = s.glassColor || DEFAULTS.glassColor;
+    const glassRgb = hexToRgb(glassColor);
+    // rgba() không nhận CSS var dạng "r,g,b" — inject thẳng giá trị
+    const gc = (a) => `rgba(${glassRgb},${a})`;
+
     style.textContent = `
       /* --- Thiết lập nền tảng --- */
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap');
@@ -145,8 +174,6 @@
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
         font-family: '${fontFamily}', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        background: ${isVideoUrl(finalBgUrl) ? 'transparent' : `${cssBackgroundUrl(finalBgUrl)} no-repeat center center fixed`} !important;
-        background-size: ${isVideoUrl(finalBgUrl) ? 'auto' : 'cover'} !important;
       }
 
       html::-webkit-scrollbar,
@@ -221,10 +248,10 @@
         transform: translate(-50%, -50%) !important;
         width: 420px !important;
         max-width: 90% !important;
-        background: rgba(255, 255, 255, var(--theme-glass-opacity)) !important;
+        background: ${gc(opacity)} !important;
         backdrop-filter: blur(var(--theme-glass-blur)) !important;
         -webkit-backdrop-filter: blur(var(--theme-glass-blur)) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border: 1px solid ${gc(0.35)} !important;
         border-radius: 28px !important;
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
         padding: 32px !important;
@@ -297,13 +324,13 @@
 
       /* --- Login Card (Glassmorphism) --- */
       .ui.segment.segment-layout {
-        background: rgba(255, 255, 255, var(--theme-glass-opacity)) !important;
+        background: ${gc(opacity)} !important;
         backdrop-filter: blur(var(--theme-glass-blur)) !important;
         -webkit-backdrop-filter: blur(var(--theme-glass-blur)) !important;
-        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        border: 1px solid ${gc(0.35)} !important;
         border-radius: 36px !important;
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08),
-                    inset 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+                    inset 0 0 0 1px ${gc(0.2)} !important;
         width: 440px !important;
         padding: 48px 40px !important;
         margin: 0 !important;
@@ -343,8 +370,8 @@
       }
 
       .ui.form .field .ui.input input {
-        background: rgba(255, 255, 255, 0.45) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        background: ${gc(0.45)} !important;
+        border: 1px solid ${gc(0.3)} !important;
         border-radius: 24px !important;
         color: var(--theme-text-color) !important;
         font-family: inherit !important;
@@ -358,7 +385,7 @@
       }
 
       .ui.form .field .ui.input input:focus {
-        background: rgba(255, 255, 255, 0.65) !important;
+        background: ${gc(0.65)} !important;
         border-color: var(--theme-primary-color) !important;
         box-shadow: 0 0 0 3px rgba(21, 37, 80, 0.15) !important;
       }
@@ -459,10 +486,10 @@
         bottom: 0 !important;
         width: 380px !important;
         height: 100vh !important;
-        background: rgba(255, 255, 255, calc(var(--theme-glass-opacity) * 0.5)) !important;
+        background: ${gc(opacity * 0.5)} !important;
         backdrop-filter: blur(calc(var(--theme-glass-blur) + 5px)) !important;
         -webkit-backdrop-filter: blur(calc(var(--theme-glass-blur) + 5px)) !important;
-        border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-left: 1px solid ${gc(0.2)} !important;
         padding: 40px 24px !important;
         box-sizing: border-box !important;
         z-index: 100 !important;
@@ -500,8 +527,8 @@
         width: 38px !important;
         height: 38px !important;
         border-radius: 50% !important;
-        background: rgba(255, 255, 255, 0.3) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        background: ${gc(0.3)} !important;
+        border: 1px solid ${gc(0.2)} !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -524,8 +551,8 @@
       .custom-noti-item {
         display: flex !important;
         align-items: center !important;
-        background: rgba(255, 255, 255, var(--theme-glass-opacity)) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        background: ${gc(opacity)} !important;
+        border: 1px solid ${gc(0.2)} !important;
         border-radius: 18px !important;
         padding: 14px 18px !important;
         backdrop-filter: blur(var(--theme-glass-blur)) !important;
@@ -538,7 +565,7 @@
 
       .custom-noti-item:hover {
         transform: translateY(-2px) !important;
-        background: rgba(255, 255, 255, calc(var(--theme-glass-opacity) + 0.2)) !important;
+        background: ${gc(Math.min(opacity + 0.2, 1))} !important;
       }
 
       .custom-noti-text {
@@ -767,20 +794,47 @@
   // ============================================================
   // 4) THEME: LOAD & APPLY
   // ============================================================
+
+  function applyBackground(settings) {
+    const bgUrl = settings.bgUrl || '';
+    const isSolid = isSolidUrl(bgUrl);
+    const isVideo = isVideoUrl(bgUrl);
+    const finalBgUrl = (bgUrl && bgUrl !== '') ? bgUrl : DEFAULT_BG_URL;
+
+    if (isSolid) {
+      const color = solidUrlToColor(bgUrl);
+      document.documentElement.style.setProperty('background', color, 'important');
+      document.body.style.setProperty('background-color', color, 'important');
+      document.body.style.setProperty('background-image', 'none', 'important');
+      applyVideoBg(null);
+    } else if (isVideo) {
+      document.documentElement.style.setProperty('background', 'transparent', 'important');
+      document.body.style.setProperty('background', 'transparent', 'important');
+      applyVideoBg(bgUrl);
+    } else {
+      document.documentElement.style.removeProperty('background');
+      document.body.style.setProperty('background-image', cssBackgroundUrl(finalBgUrl), 'important');
+      document.body.style.setProperty('background-size', 'cover', 'important');
+      document.body.style.setProperty('background-position', 'center', 'important');
+      document.body.style.setProperty('background-attachment', 'fixed', 'important');
+      document.body.style.setProperty('background-repeat', 'no-repeat', 'important');
+      document.body.style.setProperty('background-color', '', 'important');
+      applyVideoBg(null);
+    }
+  }
+
   function loadAndApplyTheme() {
     if (chrome.storage && chrome.storage.local) {
       chrome.storage.local.get(DEFAULTS, (settings) => {
         disableOriginalCSS();
         injectCustomCSS(settings);
-        applyVideoBg(isVideoUrl(settings.bgUrl) ? settings.bgUrl : null);
-        document.documentElement.style.background = '';
+        applyBackground(settings);
         rebuildPageElements();
       });
     } else {
       disableOriginalCSS();
       injectCustomCSS(DEFAULTS);
-      applyVideoBg(null);
-      document.documentElement.style.background = '';
+      applyBackground(DEFAULTS);
       rebuildPageElements();
     }
   }
@@ -790,7 +844,7 @@
       if (area !== 'local') return;
       chrome.storage.local.get(DEFAULTS, (settings) => {
         injectCustomCSS(settings);
-        applyVideoBg(isVideoUrl(settings.bgUrl) ? settings.bgUrl : null);
+        applyBackground(settings);
       });
     });
   }
@@ -809,8 +863,8 @@
     }
   }
 
-  // Chạy sớm nhất có thể — chỉ disable CSS gốc, chưa inject background
-  // để tránh flash ảnh mặc định trước khi storage callback trả về
+  // Chạy sớm nhất có thể — chỉ disable CSS gốc, đặt màu nền tạm
+  // để tránh flash trang trắng trước khi storage callback trả về
   disableOriginalCSS();
   document.documentElement.style.background = '#0a0f1e';
 
@@ -828,11 +882,14 @@
 
   reconnectObserver();
 
-  // Khi DOM sẵn sàng: load settings và apply
-  document.addEventListener("DOMContentLoaded", loadAndApplyTheme);
-  window.addEventListener("load", () => {
+  // Khi DOM sẵn sàng: load settings và apply (xóa màu nền tạm)
+  document.addEventListener("DOMContentLoaded", () => {
+    document.documentElement.style.background = '';
     loadAndApplyTheme();
-    // Kiểm tra lại sau 1s và 3s để đảm bảo
+  });
+  window.addEventListener("load", () => {
+    document.documentElement.style.background = '';
+    loadAndApplyTheme();
     setTimeout(loadAndApplyTheme, 1000);
     setTimeout(loadAndApplyTheme, 3000);
   });

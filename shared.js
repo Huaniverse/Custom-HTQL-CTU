@@ -33,7 +33,15 @@
     }
   };
 
-  window.HTQL_Shared.getHeaderCSS = function (themeColor, mutedColor, chipBg, blur) {
+  window.HTQL_Shared.getHeaderCSS = function (themeColor, mutedColor, chipBg, blur, glassHex) {
+    glassHex = glassHex || '#ffffff';
+    function gcH(a) {
+      const clean = glassHex.replace('#', '');
+      const full = clean.length === 3 ? clean.split('').map(function(c){return c+c;}).join('') : clean;
+      const r = parseInt(full.slice(0,2),16), g = parseInt(full.slice(2,4),16), b = parseInt(full.slice(4,6),16);
+      const rgb = (isNaN(r)||isNaN(g)||isNaN(b)) ? '255,255,255' : r+','+g+','+b;
+      return 'rgba('+rgb+','+a+')';
+    }
     return `
       .htql-shared-topbar {
         border-radius: 20px;
@@ -91,7 +99,7 @@
         height: 40px;
         padding: 0 16px;
         border-radius: 999px;
-        border: 1px solid rgba(255, 255, 255, 0.35);
+        border: 1px solid ${gcH(0.35)};
         background: ${chipBg};
         color: ${themeColor};
         font-family: inherit;
@@ -104,7 +112,7 @@
         transition: background 0.2s ease, color 0.2s ease;
       }
       .htql-shared-home-btn:hover {
-        background: rgba(255, 255, 255, 0.8);
+        background: ${gcH(0.8)};
       }
       .htql-shared-home-btn svg {
         width: 18px;
@@ -114,7 +122,7 @@
       .htql-shared-logout-btn {
         height: 40px;
         padding: 0 18px;
-        border: 1px solid rgba(255, 255, 255, 0.35);
+        border: 1px solid ${gcH(0.35)};
         border-radius: 13px;
         background: rgba(195, 77, 63, 0.55);
         backdrop-filter: blur(${blur}px);
@@ -129,7 +137,7 @@
       }
       .htql-shared-logout-btn:hover {
         background: rgba(195, 77, 63, 0.72);
-        border-color: rgba(255, 255, 255, 0.45);
+        border-color: ${gcH(0.45)};
       }
     `;
   };

@@ -18,6 +18,7 @@
   const DEFAULTS = {
     glassOpacity: 0.3,
     glassBlur: 20,
+    glassColor: '#ffffff',
     themeColor: '#152550',
     textColor: '#1e293b',
     headingColor: '#152550',
@@ -240,6 +241,50 @@
     return url && (url.startsWith('data:video') || /\.(mp4|webm)(\?|$)/i.test(url));
   }
 
+  function isSolidUrl(url) {
+    return url && url.startsWith('solid:');
+  }
+
+  function solidUrlToColor(url) {
+    return url && url.startsWith('solid:') ? url.slice(6) : '#0a0f1e';
+  }
+
+  function glassRgb(hex) {
+    const clean = (hex || '#ffffff').replace('#', '');
+    const full = clean.length === 3 ? clean.split('').map(c => c+c).join('') : clean;
+    const r = parseInt(full.slice(0,2),16), g = parseInt(full.slice(2,4),16), b = parseInt(full.slice(4,6),16);
+    return (isNaN(r)||isNaN(g)||isNaN(b)) ? '255,255,255' : `${r},${g},${b}`;
+  }
+
+  function gc(hex, alpha) {
+    return `rgba(${glassRgb(hex)},${alpha})`;
+  }
+
+  function applyBackground(bgUrl) {
+    const isSolid = isSolidUrl(bgUrl);
+    const isVideo = isVideoUrl(bgUrl);
+    if (isSolid) {
+      const color = solidUrlToColor(bgUrl);
+      document.documentElement.style.setProperty('background', color, 'important');
+      document.body.style.setProperty('background-color', color, 'important');
+      document.body.style.setProperty('background-image', 'none', 'important');
+      applyVideoBg(null);
+    } else if (isVideo) {
+      document.documentElement.style.removeProperty('background');
+      document.body.style.setProperty('background', 'transparent', 'important');
+      applyVideoBg(bgUrl);
+    } else {
+      document.documentElement.style.removeProperty('background');
+      document.body.style.setProperty('background-image', cssBackgroundUrl(bgUrl || DEFAULT_BG_URL), 'important');
+      document.body.style.setProperty('background-size', 'cover', 'important');
+      document.body.style.setProperty('background-position', 'center', 'important');
+      document.body.style.setProperty('background-attachment', 'fixed', 'important');
+      document.body.style.setProperty('background-repeat', 'no-repeat', 'important');
+      document.body.style.removeProperty('background-color');
+      applyVideoBg(null);
+    }
+  }
+
   function applyVideoBg(url) {
     let vid = document.getElementById('htql-hindex-video-bg');
     if (!url) {
@@ -306,7 +351,6 @@
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'htql-hindex-tile';
-    button.style.setProperty('--tile-accent-soft', config.accentSoft);
     button.innerHTML = `
       <div class="htql-hindex-tile-icon">
         <img alt="" src="${config.icon}">
@@ -319,88 +363,19 @@
 
   function buildFeatureActions() {
     return [
-      {
-        label: 'Kế hoạch học tập',
-        icon: 'images/phanhe/khht.gif',
-        accentSoft: 'rgba(109, 127, 242, 0.18)',
-        action: () => callPageAction('gotoCindex', 'frmDuLieuHindex'),
-      },
-      {
-        label: 'Đăng ký học phần',
-        icon: 'images/phanhe/hetinchi.gif',
-        accentSoft: 'rgba(179, 140, 247, 0.18)',
-        action: () => callPageAction('gotoDKindex', 'frmDuLieuDKindex'),
-      },
-      {
-        label: 'Kết quả học tập',
-        icon: 'images/phanhe/ql_diem.gif',
-        accentSoft: 'rgba(240, 177, 127, 0.18)',
-        action: () => callPageAction('gotoDindex', 'frmDuLieuDindex'),
-      },
-      {
-        label: 'Kết quả tốt nghiệp',
-        icon: 'images/phanhe/ctdt.gif',
-        accentSoft: 'rgba(126, 144, 216, 0.18)',
-        action: () => callPageAction('gotoKQTNindex', 'frmDuLieuKQTNindex', ['CQ']),
-      },
-      {
-        label: 'Nghiên cứu khoa học',
-        icon: 'images/phanhe/icon-nckh.jpg',
-        accentSoft: 'rgba(240, 201, 138, 0.18)',
-        action: () => callPageAction('gotoKindex', 'frmDuLieuKindex'),
-      },
-      {
-        label: 'Ký túc xá',
-        icon: 'images/phanhe/ktx.png',
-        accentSoft: 'rgba(113, 133, 208, 0.18)',
-        action: () => callPageAction('gotoKTX', 'frmKTX'),
-      },
-      {
-        label: 'Hệ thống lấy ý kiến trực tuyến',
-        icon: 'images/phanhe/icon-oss.jpg',
-        accentSoft: 'rgba(242, 197, 110, 0.18)',
-        action: () => {
-          location.href = 'https://oss.ctu.edu.vn';
-        },
-      },
-      {
-        label: 'Hoạt động ngoại khóa',
-        icon: 'images/phanhe/hdnk_icon.png',
-        accentSoft: 'rgba(122, 148, 222, 0.18)',
-        action: () => callPageAction('gotoHDNK', 'frmHDNK'),
-      },
-      {
-        label: 'Đoàn viên',
-        icon: 'images/phanhe/HuyHieuDoan.jpg',
-        accentSoft: 'rgba(110, 134, 212, 0.18)',
-        action: () => callPageAction('gotoDoanVien', 'frmDoanVien'),
-      },
-      {
-        label: 'Đăng ký học chương trình thứ 2',
-        icon: 'images/phanhe/korganizer.png',
-        accentSoft: 'rgba(224, 176, 79, 0.18)',
-        action: () => {
-          location.href = 'hindex.php?mID=dangkyhocsongsong';
-        },
-      },
-      {
-        label: 'Đánh giá rèn luyện',
-        icon: 'images/phanhe/hetinchi.gif',
-        accentSoft: 'rgba(140, 155, 229, 0.18)',
-        action: () => callPageAction('gotoRenLuyen', 'frmRenLuyen'),
-      },
-      {
-        label: 'Phòng học',
-        icon: 'images/phanhe/qlph.gif',
-        accentSoft: 'rgba(182, 139, 219, 0.18)',
-        action: () => callPageAction('gotoQLPH', 'frmQLPH'),
-      },
-      {
-        label: 'Lịch thi',
-        icon: 'images/phanhe/lichthi_icon.png',
-        accentSoft: 'rgba(139, 160, 236, 0.18)',
-        action: () => callPageAction('gotoSVLichThi', 'frmSVLichThi'),
-      },
+      { label: 'Kế hoạch học tập',           icon: 'images/phanhe/khht.gif',            action: () => callPageAction('gotoCindex', 'frmDuLieuHindex') },
+      { label: 'Đăng ký học phần',            icon: 'images/phanhe/hetinchi.gif',         action: () => callPageAction('gotoDKindex', 'frmDuLieuDKindex') },
+      { label: 'Kết quả học tập',             icon: 'images/phanhe/ql_diem.gif',          action: () => callPageAction('gotoDindex', 'frmDuLieuDindex') },
+      { label: 'Kết quả tốt nghiệp',          icon: 'images/phanhe/ctdt.gif',             action: () => callPageAction('gotoKQTNindex', 'frmDuLieuKQTNindex', ['CQ']) },
+      { label: 'Nghiên cứu khoa học',         icon: 'images/phanhe/icon-nckh.jpg',        action: () => callPageAction('gotoKindex', 'frmDuLieuKindex') },
+      { label: 'Ký túc xá',                   icon: 'images/phanhe/ktx.png',              action: () => callPageAction('gotoKTX', 'frmKTX') },
+      { label: 'Hệ thống lấy ý kiến trực tuyến', icon: 'images/phanhe/icon-oss.jpg',     action: () => { location.href = 'https://oss.ctu.edu.vn'; } },
+      { label: 'Hoạt động ngoại khóa',        icon: 'images/phanhe/hdnk_icon.png',        action: () => callPageAction('gotoHDNK', 'frmHDNK') },
+      { label: 'Đoàn viên',                   icon: 'images/phanhe/HuyHieuDoan.jpg',      action: () => callPageAction('gotoDoanVien', 'frmDoanVien') },
+      { label: 'Đăng ký học chương trình thứ 2', icon: 'images/phanhe/korganizer.png',   action: () => { location.href = 'hindex.php?mID=dangkyhocsongsong'; } },
+      { label: 'Đánh giá rèn luyện',          icon: 'images/phanhe/hetinchi.gif',         action: () => callPageAction('gotoRenLuyen', 'frmRenLuyen') },
+      { label: 'Phòng học',                   icon: 'images/phanhe/qlph.gif',             action: () => callPageAction('gotoQLPH', 'frmQLPH') },
+      { label: 'Lịch thi',                    icon: 'images/phanhe/lichthi_icon.png',     action: () => callPageAction('gotoSVLichThi', 'frmSVLichThi') },
     ];
   }
 
@@ -572,11 +547,11 @@
     const text = s.textColor;
     const heading = s.headingColor || theme;
     const font = s.fontFamily || 'Plus Jakarta Sans';
-    const bgUrl = resolveBgUrl(s);
-    const cardBg = `rgba(255, 255, 255, ${opacity})`;
-    const chipBg = `rgba(255, 255, 255, ${Math.min(opacity + 0.18, 0.92)})`;
-    const tileBg = `rgba(255, 255, 255, ${Math.max(opacity - 0.02, 0.12)})`;
-    const sideBtnBg = `rgba(255, 255, 255, ${Math.max(opacity - 0.04, 0.16)})`;
+    const glassHex = s.glassColor || '#ffffff';
+    const cardBg = gc(glassHex, opacity);
+    const chipBg = gc(glassHex, Math.min(opacity + 0.18, 0.92));
+    const tileBg = gc(glassHex, Math.max(opacity - 0.02, 0.12));
+    const sideBtnBg = gc(glassHex, Math.max(opacity - 0.04, 0.16));
 
     return `
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;600;700&display=swap');
@@ -586,7 +561,7 @@
         --htql-hindex-label: ${heading};
         --htql-hindex-ink: ${text};
         --htql-hindex-card: ${cardBg};
-        --htql-hindex-border: rgba(255, 255, 255, 0.22);
+        --htql-hindex-border: ${gc(glassHex, 0.22)};
         --htql-hindex-shadow: 0 14px 38px rgba(27, 43, 92, 0.10);
         --htql-hindex-blur: ${blur}px;
         --htql-hindex-chip-bg: ${chipBg};
@@ -603,7 +578,6 @@
         min-height: 100% !important;
         overflow: auto !important;
         font-family: '${font}', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-        background: ${isVideoUrl(bgUrl) ? 'transparent' : `${cssBackgroundUrl(bgUrl)} center center / cover fixed no-repeat`} !important;
       }
 
       body::before,
@@ -661,7 +635,7 @@
         -webkit-backdrop-filter: blur(var(--htql-hindex-blur));
       }
 
-      ${window.HTQL_Shared.getHeaderCSS(theme, text, chipBg, blur)}
+      ${window.HTQL_Shared.getHeaderCSS(theme, text, chipBg, blur, glassHex)}
 
       .htql-hindex-side-btn-icon svg,
       .htql-hindex-chip-icon svg,
@@ -806,7 +780,7 @@
         padding: 10px 14px;
         border-radius: 16px;
         background: var(--htql-hindex-chip-bg);
-        border: 1px solid rgba(255, 255, 255, 0.35);
+        border: 1px solid ${gc(glassHex, 0.35)};
         box-shadow: 0 8px 18px rgba(31, 54, 126, 0.05);
         backdrop-filter: blur(calc(var(--htql-hindex-blur) * 0.75));
         -webkit-backdrop-filter: blur(calc(var(--htql-hindex-blur) * 0.75));
@@ -905,7 +879,7 @@
         padding: 0 16px;
         border-radius: 999px;
         background: var(--htql-hindex-side-btn-bg);
-        border: 1px solid rgba(255, 255, 255, 0.35);
+        border: 1px solid ${gc(glassHex, 0.35)};
         box-shadow: 0 7px 14px rgba(24, 36, 88, 0.08);
         backdrop-filter: blur(var(--htql-hindex-blur));
         -webkit-backdrop-filter: blur(var(--htql-hindex-blur));
@@ -934,7 +908,7 @@
         border-radius: 18px;
         padding: 16px 12px 14px;
         background: var(--htql-hindex-tile-bg);
-        border: 1px solid rgba(255, 255, 255, 0.28);
+        border: 1px solid ${gc(glassHex, 0.28)};
         box-shadow: 0 10px 18px rgba(34, 52, 111, 0.06);
         backdrop-filter: blur(var(--htql-hindex-blur));
         -webkit-backdrop-filter: blur(var(--htql-hindex-blur));
@@ -951,20 +925,12 @@
       }
 
       .htql-hindex-tile:hover {
-        background: rgba(255, 255, 255, ${Math.min(opacity + 0.14, 0.92)});
-        border-color: ${themeTint(theme, 0.28)};
+        background: ${gc(glassHex, Math.min(opacity + 0.14, 0.92))};
+        border-color: ${gc(glassHex, 0.5)};
       }
 
       .htql-hindex-tile:hover .htql-hindex-tile-text {
         color: var(--htql-hindex-blue);
-      }
-
-      .htql-hindex-tile::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, var(--tile-accent-soft) 0%, rgba(255, 255, 255, 0) 100%);
-        pointer-events: none;
       }
 
       .htql-hindex-tile-icon,
@@ -977,7 +943,7 @@
         width: 42px;
         height: 42px;
         border-radius: 14px;
-        background: rgba(255, 255, 255, 0.5);
+        background: ${gc(glassHex, 0.5)};
         display: grid;
         place-items: center;
       }
@@ -1072,14 +1038,14 @@
 
   function removeLoadingState() {
     document.documentElement.classList.remove('htql-hindex-loading');
-    document.documentElement.style.background = '';
+    document.documentElement.classList.remove('htql-hindex-loading');
     if (loadingStyle.parentNode) loadingStyle.remove();
   }
 
   function applyTheme(settings) {
     currentSettings = { ...DEFAULTS, ...(settings || {}) };
     injectStyle(getCSS(currentSettings));
-    applyVideoBg(isVideoUrl(currentSettings.bgUrl) ? currentSettings.bgUrl : null);
+    applyBackground(currentSettings.bgUrl || '');
   }
 
   function loadAndApplyTheme(done) {

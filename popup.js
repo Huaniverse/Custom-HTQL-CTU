@@ -10,15 +10,47 @@
   const DEFAULTS = {
     glassOpacity: 0.3,
     glassBlur: 20,
+    glassColor: "#ffffff",
     themeColor: "#152550",
     textColor: "#1e293b",
     headingColor: "#152550",
     fontFamily: "Plus Jakarta Sans",
-    bgUrl: ""
+    bgUrl: "",
+    solidColor: "#1a1a2e",
+    effects: {
+      leafFloat: true,
+      leafHover: true
+    }
   };
+
+  function isSolidUrl(url) {
+    return url && url.startsWith("solid:");
+  }
+
+  function solidUrlToColor(url) {
+    return url && url.startsWith("solid:") ? url.slice(6) : "#1a1a2e";
+  }
 
   let state = { ...DEFAULTS };
   let toastTimer = null;
+  const EFFECT_DEFS = [
+    {
+      key: "leafFloat",
+      title: "Lá lơ lửng",
+      desc: "Dao động nhẹ cho các lá học phần trên trang S101. Có thể tắt nếu muốn giao diện tĩnh hơn."
+    },
+    {
+      key: "leafHover",
+      title: "Hover chuột",
+      desc: "Tạo độ nổi, hướng theo chuột khi rê trên từng lá bị gravity."
+    },
+    {
+      key: "future",
+      title: "Hiệu ứng mở rộng",
+      desc: "Khung sẵn để bổ sung thêm hiệu ứng khác mà không phải đổi lại bố cục tab.",
+      comingSoon: true
+    }
+  ];
 
   // ============================================================
   // HELPERS
@@ -40,6 +72,9 @@
   const opacityVal      = $("opacity-val");
   const blurSlider      = $("blur-slider");
   const blurVal         = $("blur-val");
+  const glassColorInput = $("glass-color-input");
+  const glassColorSwatch= $("glass-color-swatch");
+  const glassColorHex   = $("glass-color-hex");
 
   const themeColorInput = $("theme-color");
   const themeColorSwatch= $("theme-color-swatch");
@@ -60,15 +95,66 @@
   const previewCard     = $("preview-card");
   const previewTitle    = $("preview-title");
   const previewBtn      = $("preview-btn");
+  const effectsList     = $("effects-list");
 
   const currentBgThumb  = $("current-bg-thumb");
   const currentBgName   = $("current-bg-name");
   const currentBgType   = $("current-bg-type");
 
+  const solidColorInput = $("solid-color-input");
+  const solidColorSwatch= $("solid-color-swatch");
+  const solidColorHex   = $("solid-color-hex");
+  const solidApplyBtn   = $("solid-apply-btn");
+
   const btnReset        = $("btn-reset");
   const btnClose        = $("btn-close");
   const toast           = $("toast");
   const toastText       = $("toast-text");
+
+  function mergeState(saved = {}) {
+    return {
+      ...DEFAULTS,
+      ...saved,
+      glassColor: saved.glassColor || DEFAULTS.glassColor,
+      solidColor: saved.solidColor || DEFAULTS.solidColor,
+      effects: {
+        ...DEFAULTS.effects,
+        ...(saved.effects || {})
+      }
+    };
+  }
+
+  function renderEffectControls() {
+    if (!effectsList) return;
+    effectsList.innerHTML = EFFECT_DEFS.map((effect) => {
+      const enabled = effect.comingSoon ? "disabled" : "";
+      const checked = effect.comingSoon ? "" : (state.effects?.[effect.key] !== false ? "checked" : "");
+      const inputDisabled = effect.comingSoon ? "disabled" : "";
+      const toggleAttr = effect.comingSoon ? "" : `data-effect-toggle="${effect.key}"`;
+      const pill = effect.comingSoon ? '<div class="effect-pill">Sắp bổ sung</div>' : "";
+      return `
+        <div class="effect-card ${enabled}" data-effect-key="${effect.key}">
+          <div class="effect-card-body">
+            <div class="effect-card-title">${effect.title}</div>
+            <div class="effect-card-desc">${effect.desc}</div>
+            ${pill}
+          </div>
+          <label class="switch" aria-label="${effect.title}">
+            <input type="checkbox" ${toggleAttr} ${checked} ${inputDisabled}>
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function syncEffectControls() {
+    if (!effectsList) return;
+    effectsList.querySelectorAll("[data-effect-toggle]").forEach((input) => {
+      const key = input.dataset.effectToggle;
+      input.checked = state.effects?.[key] !== false;
+    });
+  }
 
   // ============================================================
   // TOAST NOTIFICATION
@@ -92,11 +178,22 @@
     const theme   = state.themeColor;
     const text    = state.textColor;
     const bg      = state.bgUrl;
+    const gc      = state.glassColor || "#ffffff";
+
+    // Parse glass color to rgba
+    function hexToRgbArr(hex) {
+      const clean = hex.replace('#', '');
+      const full = clean.length === 3 ? clean.split('').map(c => c+c).join('') : clean;
+      const r = parseInt(full.slice(0,2),16), g = parseInt(full.slice(2,4),16), b = parseInt(full.slice(4,6),16);
+      return isNaN(r) ? [255,255,255] : [r,g,b];
+    }
+    const [gr, gg, gb] = hexToRgbArr(gc);
 
     // Background
     const bgSrc = (bg && bg !== "") ? bg : "background.png";
     if (isVideoUrl(bgSrc)) {
       previewBox.style.backgroundImage = "none";
+      previewBox.style.backgroundColor = "";
       let vid = previewBox.querySelector("video.preview-bg-video");
       if (!vid) {
         vid = document.createElement("video");
@@ -113,14 +210,20 @@
         vid.dataset.src = bgSrc;
         vid.play().catch(() => {});
       }
+    } else if (isSolidUrl(bgSrc)) {
+      const existing = previewBox.querySelector("video.preview-bg-video");
+      if (existing) existing.remove();
+      previewBox.style.backgroundImage = "none";
+      previewBox.style.backgroundColor = solidUrlToColor(bgSrc);
     } else {
       const existing = previewBox.querySelector("video.preview-bg-video");
       if (existing) existing.remove();
+      previewBox.style.backgroundColor = "";
       previewBox.style.backgroundImage = cssBackgroundUrl(bgSrc);
     }
 
     // Glass card
-    previewCard.style.background = `rgba(255,255,255,${opacity})`;
+    previewCard.style.background = `rgba(${gr},${gg},${gb},${opacity})`;
     previewCard.style.backdropFilter = `blur(${blur}px)`;
     previewCard.style.webkitBackdropFilter = `blur(${blur}px)`;
 
@@ -130,6 +233,7 @@
 
     // Current bg info
     currentBgThumb.style.backgroundImage = "";
+    currentBgThumb.style.backgroundColor = "";
     let thumbVid = currentBgThumb.querySelector("video");
 
     if (bg && bg.startsWith("data:video")) {
@@ -149,6 +253,13 @@
       }
       currentBgName.textContent = "Video đã tải lên";
       currentBgType.textContent = "Local file";
+    } else if (bg && bg.startsWith("solid:")) {
+      if (thumbVid) thumbVid.remove();
+      const color = solidUrlToColor(bg);
+      currentBgThumb.style.backgroundColor = color;
+      currentBgThumb.style.backgroundImage = "none";
+      currentBgName.textContent = "Màu nền: " + color.toUpperCase();
+      currentBgType.textContent = "Solid color";
     } else {
       if (thumbVid) thumbVid.remove();
       if (bg && bg.startsWith("data:image")) {
@@ -171,6 +282,12 @@
     themeColorSwatch.style.background = theme;
     textColorSwatch.style.background  = text;
     if (headingColorSwatch) headingColorSwatch.style.background = state.headingColor || theme;
+    if (glassColorSwatch)   glassColorSwatch.style.background   = gc;
+
+    // Active glass color preset dots
+    document.querySelectorAll("[data-preset-glass-color]").forEach(dot => {
+      dot.classList.toggle("active", dot.dataset.presetGlassColor === gc);
+    });
 
     // Active preset dots
     document.querySelectorAll("#theme-presets .preset-color-dot").forEach(dot => {
@@ -188,6 +305,17 @@
       const thumbBg = thumb.dataset.bg === "default" ? "" : thumb.dataset.bg;
       thumb.classList.toggle("active", thumbBg === bg);
     });
+
+    // Active solid preset dots
+    const activeSolid = isSolidUrl(bg) ? solidUrlToColor(bg) : "";
+    document.querySelectorAll("#solid-preset-grid .solid-preset-dot").forEach(dot => {
+      dot.classList.toggle("active", dot.dataset.solid === activeSolid);
+    });
+    if (solidColorInput && isSolidUrl(bg)) {
+      solidColorInput.value = activeSolid;
+      solidColorSwatch.style.background = activeSolid;
+      solidColorHex.textContent = activeSolid.toUpperCase();
+    }
 
     // Active font options
     document.querySelectorAll("#font-select-grid .font-option").forEach(opt => {
@@ -209,8 +337,10 @@
   // ============================================================
   function loadSettings() {
     chrome.storage.local.get(DEFAULTS, (saved) => {
-      state = { ...DEFAULTS, ...saved };
+      state = mergeState(saved);
       applyStateToUI();
+      renderEffectControls();
+      syncEffectControls();
       updatePreview();
     });
   }
@@ -221,6 +351,13 @@
 
     blurSlider.value = state.glassBlur;
     blurVal.textContent = state.glassBlur + "px";
+
+    if (glassColorInput) {
+      const gc = state.glassColor || "#ffffff";
+      glassColorInput.value = gc;
+      glassColorSwatch.style.background = gc;
+      glassColorHex.textContent = gc.toUpperCase();
+    }
 
     themeColorInput.value = state.themeColor;
     themeColorHex.textContent = state.themeColor.toUpperCase();
@@ -237,18 +374,32 @@
       bgUrlInput.value = "[Ảnh đã tải lên từ máy tính]";
     } else if (state.bgUrl && state.bgUrl.startsWith("data:video")) {
       bgUrlInput.value = "[Video đã tải lên từ máy tính]";
+    } else if (state.bgUrl && state.bgUrl.startsWith("solid:")) {
+      bgUrlInput.value = "";
     } else {
       bgUrlInput.value = state.bgUrl || "";
+    }
+
+    // Sync solid color picker
+    if (solidColorInput) {
+      const sc = state.bgUrl && state.bgUrl.startsWith("solid:")
+        ? solidUrlToColor(state.bgUrl)
+        : (state.solidColor || "#1a1a2e");
+      solidColorInput.value = sc;
+      solidColorSwatch.style.background = sc;
+      solidColorHex.textContent = sc.toUpperCase();
     }
 
     // Font active state
     document.querySelectorAll("#font-select-grid .font-option").forEach(opt => {
       opt.classList.toggle("active", opt.dataset.font === state.fontFamily);
     });
+
+    syncEffectControls();
   }
 
   // ============================================================
-  // TABS (Glass / Colors / Background)
+  // TABS (Glass / Colors / Font / Effects / Background)
   // ============================================================
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -290,6 +441,35 @@
     blurVal.textContent = val + "px";
     updatePreview();
     saveSettings();
+  });
+
+  // Glass color tint
+  if (glassColorInput) {
+    glassColorInput.addEventListener("input", () => {
+      const val = glassColorInput.value;
+      state.glassColor = val;
+      glassColorSwatch.style.background = val;
+      glassColorHex.textContent = val.toUpperCase();
+      updatePreview();
+      saveSettings();
+    });
+  }
+
+  document.querySelectorAll("[data-preset-glass-color]").forEach(dot => {
+    dot.addEventListener("click", () => {
+      const color = dot.dataset.presetGlassColor;
+      state.glassColor = color;
+      if (glassColorInput) {
+        glassColorInput.value = color;
+        glassColorSwatch.style.background = color;
+        glassColorHex.textContent = color.toUpperCase();
+      }
+      document.querySelectorAll("[data-preset-glass-color]").forEach(d => {
+        d.classList.toggle("active", d.dataset.presetGlassColor === color);
+      });
+      updatePreview();
+      saveSettings();
+    });
   });
 
   // Glass preset buttons
@@ -397,6 +577,20 @@
     });
   });
 
+  if (effectsList) {
+    effectsList.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const key = target.dataset.effectToggle;
+      if (!key) return;
+      state.effects = {
+        ...(state.effects || DEFAULTS.effects),
+        [key]: target.checked
+      };
+      saveSettings();
+    });
+  }
+
   // ============================================================
   // BACKGROUND - FILE UPLOAD
   // ============================================================
@@ -492,12 +686,65 @@
   });
 
   // ============================================================
+  // SOLID COLOR BACKGROUND
+  // ============================================================
+  if (solidColorInput) {
+    solidColorInput.addEventListener("input", () => {
+      const val = solidColorInput.value;
+      state.solidColor = val;
+      solidColorSwatch.style.background = val;
+      solidColorHex.textContent = val.toUpperCase();
+      // Sync active dots
+      document.querySelectorAll("#solid-preset-grid .solid-preset-dot").forEach(d => {
+        d.classList.toggle("active", d.dataset.solid === val);
+      });
+    });
+  }
+
+  if (solidApplyBtn) {
+    solidApplyBtn.addEventListener("click", () => {
+      const color = solidColorInput ? solidColorInput.value : "#1a1a2e";
+      state.solidColor = color;
+      state.bgUrl = "solid:" + color;
+      bgUrlInput.value = "";
+      updatePreview();
+      saveSettings();
+      showToast("Đã áp dụng màu nền: " + color.toUpperCase() + "!");
+    });
+  }
+
+  document.querySelectorAll("#solid-preset-grid .solid-preset-dot").forEach(dot => {
+    dot.addEventListener("click", () => {
+      const color = dot.dataset.solid;
+      state.solidColor = color;
+      state.bgUrl = "solid:" + color;
+      if (solidColorInput) {
+        solidColorInput.value = color;
+        solidColorSwatch.style.background = color;
+        solidColorHex.textContent = color.toUpperCase();
+      }
+      bgUrlInput.value = "";
+      document.querySelectorAll("#solid-preset-grid .solid-preset-dot").forEach(d => {
+        d.classList.toggle("active", d.dataset.solid === color);
+      });
+      updatePreview();
+      saveSettings();
+      showToast("Màu nền: " + color.toUpperCase() + "!");
+    });
+  });
+
+  // ============================================================
   // CLEAR BACKGROUND
   // ============================================================
   btnClearBg.addEventListener("click", () => {
     state.bgUrl = "";
     bgUrlInput.value = "";
     fileInput.value = "";
+    if (solidColorInput) {
+      solidColorInput.value = state.solidColor || "#1a1a2e";
+      solidColorSwatch.style.background = state.solidColor || "#1a1a2e";
+      solidColorHex.textContent = (state.solidColor || "#1a1a2e").toUpperCase();
+    }
     updatePreview();
     saveSettings();
     showToast("Đã đặt lại ảnh nền mặc định!");
