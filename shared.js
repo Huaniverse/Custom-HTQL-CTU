@@ -28,6 +28,8 @@
         return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12a3 3 0 1 0-2.999-3A3 3 0 0 0 8 12Zm8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3ZM4 14a4 4 0 0 0-4 4v4h4v-4h4v4h4v-4a4 4 0 0 0-4-4H4Zm16 0a4 4 0 0 0-4 4v4h8v-4a4 4 0 0 0-4-4Z"/></svg>`;
       case 'course':
         return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 4v2h10V7H7Zm0 4v2h6v-2H7Z"/></svg>`;
+      case 'print':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7V3h12v4H6Zm10-2H8v2h8V5Zm2 3H6a3 3 0 0 0-3 3v4h4v5h10v-5h4v-4a3 3 0 0 0-3-3Zm-4 10H10v-5h4v5Zm4-6.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>`;
       default:
         return '';
     }

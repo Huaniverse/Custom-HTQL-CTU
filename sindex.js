@@ -1479,6 +1479,12 @@
         cursor: pointer;
         transition: background 0.18s ease, transform 0.18s ease;
       }
+      .htql-s301-btn svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+        flex: 0 0 auto;
+      }
       .htql-s301-btn:active { transform: translateY(1px); }
       .htql-s301-btn-primary {
         background: var(--htql-sindex-blue);
@@ -1541,6 +1547,28 @@
         justify-content: center;
         padding: 16px 20px;
         border-bottom: 1px solid var(--htql-sindex-border);
+      }
+      .htql-s101-actions-card {
+        display: none;
+      }
+      .htql-s101-actions {
+        display: flex;
+        justify-content: center;
+        padding: 18px 0 0;
+      }
+      .htql-s101-print-btn {
+        min-width: 220px;
+        background: var(--htql-sindex-card);
+        color: var(--htql-sindex-blue);
+        border: 1px solid var(--htql-sindex-border);
+        box-shadow: 0 12px 30px rgba(27, 43, 92, 0.12);
+        backdrop-filter: blur(var(--htql-sindex-blur));
+        -webkit-backdrop-filter: blur(var(--htql-sindex-blur));
+        padding: 11px 20px;
+      }
+      .htql-s101-print-btn:hover {
+        background: ${gc(glassHex, 0.8)};
+        transform: translateY(-1px);
       }
       .htql-s301-table td:first-child { color: var(--htql-sindex-muted); font-size: 0.82rem; }
 
@@ -1940,6 +1968,41 @@
     `;
   }
 
+  function openS101PrintExport() {
+    const url = 'InKeHoachHocTap.php';
+    const features = [
+      'width=780',
+      'height=580',
+      'left=' + Math.max(0, Math.round((window.screen?.width || 780) / 2 - 390)),
+      'top=' + Math.max(0, Math.round((window.screen?.height || 580) / 2 - 290)),
+      'location=no',
+      'menubar=no',
+      'status=no',
+      'toolbar=no',
+      'scrollbars=yes',
+      'resizable=no',
+    ].join(', ');
+    const win = window.open(url, '', features);
+    if (win) {
+      try { win.resizeTo(780, 580); } catch (_) {}
+      try { win.moveTo(Math.max(0, Math.round((window.screen?.width || 780) / 2 - 390)), Math.max(0, Math.round((window.screen?.height || 580) / 2 - 290))); } catch (_) {}
+      win.focus();
+      return;
+    }
+    location.href = url;
+  }
+
+  function setupS101Actions(root) {
+    root.querySelector('#htql-s101-print')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      if (typeof window.printTL === 'function') {
+        window.printTL();
+        return;
+      }
+      openS101PrintExport();
+    });
+  }
+
   // ─── SEMESTER PLAN SHELL (sindex base) — bảng ───────────────────────────
 
   function buildSindexShell(data) {
@@ -2070,12 +2133,19 @@
               ? clusterHTML
               : '<p style="text-align:center;opacity:0.6;padding:20px;">Không có dữ liệu</p>'}
           </div>
+          <div class="htql-s101-actions">
+            <button type="button" id="htql-s101-print" class="htql-s301-btn htql-s101-print-btn">
+              ${svgIcon('print')}
+              <span>In/ Xuất ra file</span>
+            </button>
+          </div>
         </main>
       </div>
     `;
 
     window.HTQL_Shared.setupHeaderActions(root, '../../hindex.php', '../../../../logout.php');
     requestAnimationFrame(() => requestAnimationFrame(() => layoutAllClusters(root)));
+    setupS101Actions(root);
     return root;
   }
 
