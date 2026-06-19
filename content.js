@@ -4,6 +4,20 @@
 (function () {
   "use strict";
 
+  // Chèn overlay đen ngay khi script chạy (document_start) để tránh flash nội dung gốc.
+  // Sẽ được fade-out sau khi theme áp dụng xong.
+  (function () {
+    const ov = document.createElement('div');
+    ov.id = 'htql-fade-overlay';
+    ov.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:2147483647',
+      'background:#000', 'opacity:1', 'pointer-events:none',
+      'transition:opacity 380ms ease',
+      'will-change:opacity',
+    ].join(';');
+    (document.documentElement || document).appendChild(ov);
+  })();
+
   const DEFAULT_BG_URL = chrome.runtime.getURL('background.png');
   let observer;
 
@@ -841,21 +855,54 @@
         injectCustomCSS(settings);
         applyBackground(settings);
         rebuildPageElements();
+        fadeInPage();
       });
     } else {
       disableOriginalCSS();
       injectCustomCSS(DEFAULTS);
       applyBackground(DEFAULTS);
       rebuildPageElements();
+      fadeInPage();
     }
+  }
+
+  // ============================================================
+  // FADE TRANSITION HELPERS
+  // ============================================================
+  // Fade-out toàn trang rồi reload để tránh chớp màn hình
+  function reloadWithFade() {
+    let overlay = document.getElementById('htql-fade-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'htql-fade-overlay';
+      overlay.style.cssText = [
+        'position:fixed', 'inset:0', 'z-index:2147483647',
+        'background:#000', 'opacity:0', 'pointer-events:none',
+        'transition:opacity 320ms ease',
+        'will-change:opacity',
+      ].join(';');
+      document.documentElement.appendChild(overlay);
+    }
+    void overlay.offsetWidth;
+    overlay.style.opacity = '1';
+    setTimeout(() => location.reload(), 350);
+  }
+
+  // Fade-in trang sau khi theme đã được áp dụng
+  function fadeInPage() {
+    const overlay = document.getElementById('htql-fade-overlay');
+    if (!overlay) return;
+    void overlay.offsetWidth;
+    overlay.style.opacity = '0';
+    setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 420);
   }
 
   if (chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
       if ('enabled' in changes) {
-        // Reload khi bật hoặc tắt để trang phản ánh đúng trạng thái
-        location.reload();
+        // Fade rồi reload khi bật hoặc tắt để tránh chớp màn hình
+        reloadWithFade();
         return;
       }
       chrome.storage.local.get(DEFAULTS, (settings) => {
@@ -895,7 +942,8 @@
   // Khởi động: kiểm tra enabled trước, chỉ inject nếu được bật
   chrome.storage.local.get({ enabled: true }, (result) => {
     if (result.enabled === false) {
-      // Extension bị tắt — không làm gì, để trang hiển thị CSS gốc bình thường
+      // Extension bị tắt — fade-in nhanh rồi để trang hiển thị CSS gốc bình thường
+      setTimeout(() => fadeInPage(), 80);
       return;
     }
 

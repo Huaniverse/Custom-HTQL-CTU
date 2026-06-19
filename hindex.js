@@ -10,6 +10,27 @@
     return;
   }
 
+  // Overlay đen ngay khi script chạy — fade-out sau khi theme sẵn sàng
+  (function () {
+    const ov = document.createElement('div');
+    ov.id = 'htql-fade-overlay';
+    ov.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:2147483647',
+      'background:#000', 'opacity:1', 'pointer-events:none',
+      'transition:opacity 380ms ease',
+      'will-change:opacity',
+    ].join(';');
+    (document.documentElement || document).appendChild(ov);
+  })();
+
+  function fadeInPage() {
+    const overlay = document.getElementById('htql-fade-overlay');
+    if (!overlay) return;
+    void overlay.offsetWidth;
+    overlay.style.opacity = '0';
+    setTimeout(() => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 420);
+  }
+
   const DEFAULT_BG_URL = chrome.runtime.getURL('background.png');
   const ROOT_ID = 'htql-hindex-custom-root';
   const STYLE_ID = 'htql-hindex-custom-style';
@@ -1094,6 +1115,7 @@
       if (enabled === false) {
         removeLoadingState();
         document.documentElement.style.background = '';
+        fadeInPage();
         return;
       }
 
@@ -1118,15 +1140,35 @@
         }
 
         removeLoadingState();
+        fadeInPage();
       });
     });
+  }
+
+  // Tạo overlay mờ dần trước khi reload để tránh chớp màn hình
+  function reloadWithFade() {
+    let overlay = document.getElementById('htql-fade-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'htql-fade-overlay';
+      overlay.style.cssText = [
+        'position:fixed', 'inset:0', 'z-index:2147483647',
+        'background:#000', 'opacity:0', 'pointer-events:none',
+        'transition:opacity 320ms ease',
+        'will-change:opacity',
+      ].join(';');
+      document.documentElement.appendChild(overlay);
+    }
+    void overlay.offsetWidth;
+    overlay.style.opacity = '1';
+    setTimeout(() => location.reload(), 350);
   }
 
   if (chrome.storage && chrome.storage.onChanged) {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
       if ('enabled' in changes) {
-        location.reload();
+        reloadWithFade();
         return;
       }
       if (!booted) return;
