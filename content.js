@@ -4,18 +4,24 @@
 (function () {
   "use strict";
 
-  // Chèn overlay đen ngay khi script chạy (document_start) để tránh flash nội dung gốc.
-  // Sẽ được fade-out sau khi theme áp dụng xong.
+  // Chèn overlay đen chỉ khi trang được reload do bật/tắt extension.
+  // Dùng sessionStorage để đánh dấu: chỉ hiện overlay 1 lần duy nhất khi toggle.
   (function () {
-    const ov = document.createElement('div');
-    ov.id = 'htql-fade-overlay';
-    ov.style.cssText = [
-      'position:fixed', 'inset:0', 'z-index:2147483647',
-      'background:#000', 'opacity:1', 'pointer-events:none',
-      'transition:opacity 380ms ease',
-      'will-change:opacity',
-    ].join(';');
-    (document.documentElement || document).appendChild(ov);
+    const TOGGLE_KEY = 'htql_toggle_reload';
+    const isToggleReload = sessionStorage.getItem(TOGGLE_KEY) === '1';
+    if (isToggleReload) {
+      // Xóa cờ ngay lập tức để các lần reload sau không bị ảnh hưởng
+      sessionStorage.removeItem(TOGGLE_KEY);
+      const ov = document.createElement('div');
+      ov.id = 'htql-fade-overlay';
+      ov.style.cssText = [
+        'position:fixed', 'inset:0', 'z-index:2147483647',
+        'background:#000', 'opacity:1', 'pointer-events:none',
+        'transition:opacity 380ms ease',
+        'will-change:opacity',
+      ].join(';');
+      (document.documentElement || document).appendChild(ov);
+    }
   })();
 
   const DEFAULT_BG_URL = chrome.runtime.getURL('background.png');
@@ -870,6 +876,7 @@
   // FADE TRANSITION HELPERS
   // ============================================================
   // Fade-out toàn trang rồi reload để tránh chớp màn hình
+  // Đặt cờ sessionStorage để trang kế tiếp biết cần hiện overlay fade-in
   function reloadWithFade() {
     let overlay = document.getElementById('htql-fade-overlay');
     if (!overlay) {
@@ -885,6 +892,8 @@
     }
     void overlay.offsetWidth;
     overlay.style.opacity = '1';
+    // Đánh dấu để trang sau khi reload mới hiện overlay fade-in
+    sessionStorage.setItem('htql_toggle_reload', '1');
     setTimeout(() => location.reload(), 350);
   }
 
