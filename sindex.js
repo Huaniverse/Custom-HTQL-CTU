@@ -3495,6 +3495,7 @@
       }
       booted = true;
       applySettings(settings);
+      removeLoadingState();
       fadeInPage();
     });
   }
@@ -3515,13 +3516,9 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      boot();
-      setTimeout(removeLoadingState, 50);
-    });
+    document.addEventListener('DOMContentLoaded', boot);
   } else {
     boot();
-    removeLoadingState();
   }
 
 })();
