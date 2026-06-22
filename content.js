@@ -240,8 +240,7 @@
       }
 
       /* --- Căn giữa Login Container ---
-         Mặc định: căn giữa màn hình hoàn toàn.
-         Chỉ shift sang trái khi có sidebar (>=1024px) mà không đủ chỗ. */
+         Luôn giữa màn hình. Chỉ lệch trái khi sidebar mở và không đủ không gian. */
       .ui.container.medium {
         position: fixed !important;
         left: 50% !important;
@@ -254,13 +253,15 @@
         z-index: 200 !important;
       }
 
-      /* Khi có sidebar (>=1024px): dịch sang trái một nửa width sidebar */
+      /* Chỉ lệch khi sidebar mở VÀ màn hình không đủ rộng để cả hai */
       @media (min-width: 1024px) {
-        .ui.container.medium {
-          left: min(
+        body.htql-sidebar-open .ui.container.medium {
+          left: clamp(
+            calc(var(--login-card-width) / 2 + var(--login-edge-gap)),
             50%,
-            calc(100vw - var(--login-sidebar-width) - (var(--login-card-width) / 2) - var(--login-edge-gap))
+            calc(100vw - var(--login-sidebar-width) - var(--login-card-width) / 2 - var(--login-edge-gap))
           ) !important;
+          transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
       }
 
@@ -368,15 +369,58 @@
       }
 
       /* --- Form Elements --- */
+
+      /* Ẩn h3 gốc "Đăng nhập" — thay bằng block branding tùy chỉnh */
       .ui.segment.segment-layout h3.ui.header {
-        color: var(--theme-primary-color) !important;
-        font-size: 36px !important;
-        font-weight: 700 !important;
-        text-align: center !important;
-        margin-top: 0 !important;
+        display: none !important;
+      }
+
+      /* --- Login Branding Block --- */
+      .htql-login-brand {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 14px !important;
         margin-bottom: 32px !important;
-        border: none !important;
-        letter-spacing: -0.5px !important;
+      }
+
+      .htql-login-brand-logo {
+        width: 56px !important;
+        height: 56px !important;
+        object-fit: contain !important;
+        border-radius: 14px !important;
+        filter: drop-shadow(0 4px 12px rgba(21,37,80,0.18)) !important;
+        display: block !important;
+        flex-shrink: 0 !important;
+      }
+
+      .htql-login-brand-text {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 2px !important;
+      }
+
+      .htql-login-brand-title {
+        font-size: 30px !important;
+        font-weight: 800 !important;
+        color: var(--theme-primary-color) !important;
+        letter-spacing: -0.4px !important;
+        line-height: 1.2 !important;
+        text-align: left !important;
+        font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif !important;
+        margin: 0 !important;
+      }
+
+      .htql-login-brand-subtitle {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        color: var(--theme-text-color) !important;
+        opacity: 0.68 !important;
+        letter-spacing: 0.01em !important;
+        text-align: left !important;
+        margin: 0 !important;
       }
 
       .custom-field-label {
@@ -520,13 +564,19 @@
         backdrop-filter: blur(calc(var(--theme-glass-blur) + 5px)) !important;
         -webkit-backdrop-filter: blur(calc(var(--theme-glass-blur) + 5px)) !important;
         border-left: 1px solid ${gc(0.2)} !important;
-        padding: 40px 24px !important;
+        padding: 74px 24px 32px !important;
         box-sizing: border-box !important;
         z-index: 100 !important;
         overflow-y: auto !important;
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
+        transform: translateX(100%) !important;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
         display: block !important;
+      }
+
+      .slogan-container.htql-sidebar-open {
+        transform: translateX(0) !important;
       }
 
       .slogan-container::-webkit-scrollbar {
@@ -544,13 +594,105 @@
         .slogan-container {
           display: none !important;
         }
+        #htql-sidebar-toggle {
+          display: none !important;
+        }
       }
 
-      .custom-noti-header {
+      /* --- Nút toggle sidebar --- */
+      #htql-sidebar-toggle {
+        position: fixed !important;
+        right: 16px !important;
+        top: 16px !important;
+        z-index: 200 !important;
         display: flex !important;
         align-items: center !important;
-        margin-bottom: 32px !important;
+        justify-content: center !important;
+        width: 42px !important;
+        height: 42px !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+        border: 1px solid ${gc(0.35)} !important;
+        background: ${gc(opacity * 0.7)} !important;
+        backdrop-filter: blur(var(--theme-glass-blur)) !important;
+        -webkit-backdrop-filter: blur(var(--theme-glass-blur)) !important;
+        color: var(--theme-primary-color) !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+        transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease !important;
+        user-select: none !important;
+      }
+
+      #htql-sidebar-toggle:hover {
+        background: ${gc(Math.min(opacity * 0.7 + 0.15, 1))} !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;
+      }
+
+      /* Icon chuông (khi đóng) */
+      #htql-toggle-icon-bell {
+        display: flex !important;
+        width: 18px !important;
+        height: 18px !important;
+        fill: currentColor !important;
+        flex-shrink: 0 !important;
+      }
+
+      /* Icon × (khi mở) — ẩn mặc định */
+      #htql-toggle-icon-close {
+        display: none !important;
+        width: 16px !important;
+        height: 16px !important;
+        stroke: currentColor !important;
+        fill: none !important;
+        flex-shrink: 0 !important;
+      }
+
+      #htql-sidebar-toggle.htql-sidebar-open #htql-toggle-icon-bell {
+        display: none !important;
+      }
+
+      #htql-sidebar-toggle.htql-sidebar-open #htql-toggle-icon-close {
+        display: flex !important;
+      }
+
+      /* Badge số thông báo mới trên nút toggle */
+      #htql-toggle-badge {
+        display: none !important;
+        position: absolute !important;
+        top: -4px !important;
+        right: -4px !important;
+        min-width: 18px !important;
+        height: 18px !important;
+        border-radius: 999px !important;
+        background: #EF4444 !important;
+        color: #fff !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        padding: 0 5px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        border: 2px solid transparent !important;
+      }
+
+      #htql-toggle-badge.htql-badge-visible {
+        display: flex !important;
+      }
+
+      /* Header bên trong sidebar — ngang hàng với nút toggle ngoài */
+      .custom-noti-header {
+        position: sticky !important;
+        top: -74px !important;
+        margin: -74px -24px 24px !important;
+        padding: 16px 24px 16px 20px !important;
+        height: 74px !important;
+        display: flex !important;
+        align-items: center !important;
         gap: 12px !important;
+        background: transparent !important;
+        box-sizing: border-box !important;
+        z-index: 2 !important;
       }
 
       .custom-noti-icon-container {
@@ -563,13 +705,15 @@
         align-items: center !important;
         justify-content: center !important;
         color: var(--theme-primary-color) !important;
+        flex-shrink: 0 !important;
       }
 
       .custom-noti-title {
-        font-size: 18px !important;
+        font-size: 16px !important;
         font-weight: 700 !important;
         color: var(--theme-primary-color) !important;
         letter-spacing: -0.2px !important;
+        flex: 1 !important;
       }
 
       .custom-noti-list {
@@ -609,6 +753,125 @@
       .custom-noti-item:hover .custom-noti-text {
         color: var(--theme-primary-color) !important;
       }
+
+      /* --- Popup thông báo mới (hiển thị 1 lần) --- */
+      #htql-noti-popup {
+        position: fixed !important;
+        right: 16px !important;
+        bottom: 24px !important;
+        z-index: 10000 !important;
+        max-width: 340px !important;
+        background: ${gc(Math.min(opacity + 0.2, 0.95))} !important;
+        backdrop-filter: blur(calc(var(--theme-glass-blur) + 8px)) !important;
+        -webkit-backdrop-filter: blur(calc(var(--theme-glass-blur) + 8px)) !important;
+        border: 1px solid ${gc(0.35)} !important;
+        border-radius: 20px !important;
+        padding: 18px 20px !important;
+        box-shadow: 0 16px 40px rgba(0,0,0,0.18) !important;
+        transform: translateY(20px) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1) !important;
+        box-sizing: border-box !important;
+      }
+
+      #htql-noti-popup.htql-popup-show {
+        transform: translateY(0) !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+      }
+
+      .htql-popup-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        margin-bottom: 12px !important;
+      }
+
+      .htql-popup-title {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: var(--theme-primary-color) !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 7px !important;
+      }
+
+      .htql-popup-dot {
+        width: 8px !important;
+        height: 8px !important;
+        border-radius: 50% !important;
+        background: #EF4444 !important;
+        flex-shrink: 0 !important;
+        animation: htql-pulse 1.4s ease-in-out infinite !important;
+      }
+
+      @keyframes htql-pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(0.85); }
+      }
+
+      .htql-popup-close {
+        width: 24px !important;
+        height: 24px !important;
+        border-radius: 50% !important;
+        border: none !important;
+        background: ${gc(0.2)} !important;
+        color: var(--theme-text-color) !important;
+        font-size: 14px !important;
+        line-height: 1 !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: background 0.2s !important;
+        flex-shrink: 0 !important;
+        font-family: inherit !important;
+      }
+
+      .htql-popup-close:hover {
+        background: ${gc(0.4)} !important;
+      }
+
+      .htql-popup-body {
+        font-size: 12.5px !important;
+        color: var(--theme-text-color) !important;
+        line-height: 1.5 !important;
+        font-weight: 500 !important;
+      }
+
+      .htql-popup-count {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #EF4444 !important;
+        color: #fff !important;
+        border-radius: 999px !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        padding: 2px 7px !important;
+        margin-right: 5px !important;
+      }
+
+      .htql-popup-action {
+        margin-top: 12px !important;
+        width: 100% !important;
+        padding: 9px !important;
+        border-radius: 12px !important;
+        border: none !important;
+        background: var(--theme-primary-color) !important;
+        color: #fff !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        font-family: inherit !important;
+        cursor: pointer !important;
+        transition: filter 0.2s ease !important;
+        box-sizing: border-box !important;
+      }
+
+      .htql-popup-action:hover {
+        filter: brightness(0.85) !important;
+      }
     `;
   }
 
@@ -616,6 +879,29 @@
   // 3) THAY THẾ DOM THÔNG BÁO & THÊM LABELS
   // ============================================================
   function rebuildPageElements() {
+    // --- Inject Login Branding Block (logo + CTU Management + Hệ thống quản lý) ---
+    const loginCard = document.querySelector('.ui.segment.segment-layout');
+    if (loginCard && !document.getElementById('htql-login-brand')) {
+      const h3 = loginCard.querySelector('h3.ui.header');
+      const brand = document.createElement('div');
+      brand.id = 'htql-login-brand';
+      brand.className = 'htql-login-brand';
+      brand.innerHTML = `
+        <img class="htql-login-brand-logo"
+             src="${chrome.runtime.getURL('logo.png')}"
+             alt="CTU Logo" />
+        <div class="htql-login-brand-text">
+          <div class="htql-login-brand-title">CTU Management</div>
+          <div class="htql-login-brand-subtitle">Hệ thống quản lý Đại học Cần Thơ</div>
+        </div>
+      `;
+      if (h3) {
+        h3.parentNode.insertBefore(brand, h3);
+      } else {
+        loginCard.insertBefore(brand, loginCard.firstChild);
+      }
+    }
+
     // Thêm Labels cho Form đăng nhập
     const usernameInput = document.getElementById('usernameUserInput');
     if (usernameInput && !document.getElementById('custom-label-username')) {
@@ -696,6 +982,182 @@
       ].join(';');
       document.body.appendChild(wm);
     }
+
+    // Sidebar toggle button
+    setupSidebarToggle();
+
+    // Popup thông báo mới
+    setupNotiPopup();
+  }
+
+  // ============================================================
+  // SIDEBAR TOGGLE
+  // ============================================================
+  let sidebarToggleSetup = false;
+  function setupSidebarToggle() {
+    if (sidebarToggleSetup) return;
+    const sidebar = document.querySelector('.slogan-container');
+    if (!sidebar) return;
+    sidebarToggleSetup = true;
+
+    // Tạo nút toggle nếu chưa có
+    if (!document.getElementById('htql-sidebar-toggle')) {
+      const btn = document.createElement('button');
+      btn.id = 'htql-sidebar-toggle';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Mở/đóng thông báo');
+      btn.innerHTML = `
+        <svg id="htql-toggle-icon-bell" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5.85 3.5a.75.75 0 00-1.117-1 9.719 9.719 0 00-2.348 4.876.75.75 0 001.479.248A8.219 8.219 0 015.85 3.5zM19.267 2.5a.75.75 0 10-1.118 1 8.22 8.22 0 011.987 4.124.75.75 0 001.48-.248A9.72 9.72 0 0019.267 2.5z"/>
+          <path fill-rule="evenodd" d="M12 2.25A6.75 6.75 0 005.25 9v.75a8.217 8.217 0 01-2.119 5.52.75.75 0 00.298 1.206c1.544.57 3.16.99 4.831 1.243a3.75 3.75 0 107.48 0 24.583 24.583 0 004.83-1.244.75.75 0 00.298-1.205 8.217 8.217 0 01-2.118-5.52V9A6.75 6.75 0 0012 2.25z" clip-rule="evenodd"/>
+        </svg>
+        <svg id="htql-toggle-icon-close" viewBox="0 0 24 24" aria-hidden="true" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        <span id="htql-toggle-badge"></span>
+      `;
+      btn.style.position = 'relative';
+
+      btn.addEventListener('click', () => {
+        const isOpen = sidebar.classList.contains('htql-sidebar-open');
+        if (isOpen) {
+          sidebar.classList.remove('htql-sidebar-open');
+          btn.classList.remove('htql-sidebar-open');
+          document.body.classList.remove('htql-sidebar-open');
+        } else {
+          sidebar.classList.add('htql-sidebar-open');
+          btn.classList.add('htql-sidebar-open');
+          document.body.classList.add('htql-sidebar-open');
+          // Xóa badge khi mở sidebar
+          const badge = btn.querySelector('#htql-toggle-badge');
+          if (badge) {
+            badge.textContent = '';
+            badge.classList.remove('htql-badge-visible');
+          }
+        }
+      });
+
+      document.body.appendChild(btn);
+    }
+  }
+
+  // ============================================================
+  // POPUP THÔNG BÁO MỚI (hiển thị 1 lần khi có thay đổi)
+  // ============================================================
+  const NOTI_STORAGE_KEY = 'htql_last_noti_texts';
+  let notiPopupSetup = false;
+
+  function setupNotiPopup() {
+    if (notiPopupSetup) return;
+    const originalList = document.getElementById('notification-list');
+    if (!originalList) return;
+
+    // Lấy danh sách thông báo hiện tại
+    const currentTexts = getNotificationTexts(originalList);
+    if (currentTexts.length === 0) return; // Chưa load xong, bỏ qua
+
+    notiPopupSetup = true;
+
+    const saved = sessionStorage.getItem(NOTI_STORAGE_KEY);
+    const savedTexts = saved ? JSON.parse(saved) : null;
+
+    // Lưu danh sách lần đầu
+    if (!savedTexts) {
+      sessionStorage.setItem(NOTI_STORAGE_KEY, JSON.stringify(currentTexts));
+      return;
+    }
+
+    // So sánh — tìm thông báo mới (có trong current nhưng không có trong saved)
+    const newTexts = currentTexts.filter(t => !savedTexts.includes(t));
+    if (newTexts.length === 0) {
+      // Cập nhật danh sách lưu nếu có thay đổi khác
+      sessionStorage.setItem(NOTI_STORAGE_KEY, JSON.stringify(currentTexts));
+      return;
+    }
+
+    // Cập nhật bộ đệm
+    sessionStorage.setItem(NOTI_STORAGE_KEY, JSON.stringify(currentTexts));
+
+    // Hiển thị popup 1 lần
+    showNotiPopup(newTexts.length);
+  }
+
+  function getNotificationTexts(listEl) {
+    return Array.from(listEl.children)
+      .map(el => el.textContent.trim())
+      .filter(t => t && !t.toLowerCase().includes('không có thông báo'));
+  }
+
+  function showNotiPopup(count) {
+    if (document.getElementById('htql-noti-popup')) return; // Chỉ 1 lần
+
+    const popup = document.createElement('div');
+    popup.id = 'htql-noti-popup';
+    popup.innerHTML = `
+      <div class="htql-popup-header">
+        <div class="htql-popup-title">
+          <span class="htql-popup-dot"></span>
+          Thông báo mới
+        </div>
+        <button class="htql-popup-close" aria-label="Đóng">✕</button>
+      </div>
+      <div class="htql-popup-body">
+        Có <span class="htql-popup-count">${count}</span>
+        thông báo mới kể từ lần đăng nhập trước.
+      </div>
+      <button class="htql-popup-action">Xem thông báo</button>
+    `;
+
+    document.body.appendChild(popup);
+
+    // Animate in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        popup.classList.add('htql-popup-show');
+      });
+    });
+
+    // Tự động ẩn sau 6 giây
+    const autoHide = setTimeout(() => dismissNotiPopup(popup), 6000);
+
+    // Nút đóng
+    popup.querySelector('.htql-popup-close').addEventListener('click', () => {
+      clearTimeout(autoHide);
+      dismissNotiPopup(popup);
+    });
+
+    // Nút "Xem thông báo" — mở sidebar và đóng popup
+    popup.querySelector('.htql-popup-action').addEventListener('click', () => {
+      clearTimeout(autoHide);
+      dismissNotiPopup(popup);
+      // Mở sidebar
+      const sidebar = document.querySelector('.slogan-container');
+      const toggleBtn = document.getElementById('htql-sidebar-toggle');
+      if (sidebar && !sidebar.classList.contains('htql-sidebar-open')) {
+        sidebar.classList.add('htql-sidebar-open');
+        document.body.classList.add('htql-sidebar-open');
+        if (toggleBtn) {
+          toggleBtn.classList.add('htql-sidebar-open');
+        }
+      }
+    });
+
+    // Cập nhật badge trên nút toggle
+    const toggleBtn = document.getElementById('htql-sidebar-toggle');
+    if (toggleBtn) {
+      const badge = toggleBtn.querySelector('#htql-toggle-badge');
+      if (badge) {
+        badge.textContent = count;
+        badge.classList.add('htql-badge-visible');
+      }
+    }
+  }
+
+  function dismissNotiPopup(popup) {
+    if (!popup) return;
+    popup.classList.remove('htql-popup-show');
+    setTimeout(() => { if (popup.parentNode) popup.parentNode.removeChild(popup); }, 350);
   }
 
   // ============================================================
